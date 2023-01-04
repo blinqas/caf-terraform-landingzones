@@ -107,8 +107,7 @@ caf_launchpad:
   tenant_id: {{tenant_id.stdout}}
   global_tags_propagated: yes
   tags:
-    caf_deployment_mode: demo
-
+    caf_deployment_mode: github_action
 
 azuread_user_ea_account_owner: {{azuread_user_ea_account_owner | default(upn)}}
 ea_owner_object_id: {{ea_owner_object_id | default(object_id)}}
