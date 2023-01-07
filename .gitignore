@@ -10,5 +10,6 @@
 **/*.log
 **/backend.azurerm.tf
 public
+/azure-caf-modules
 *output.json
 **/templates/ansible/action_plugins/__pycache__
