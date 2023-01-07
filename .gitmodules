@@ -2,4 +2,4 @@
 	url = https://github.com/blinqas/terraform-azurerm-caf.git
 	path = azure-caf-modules
 	branch = blinq-5.6.4
-	ignore = all
+
