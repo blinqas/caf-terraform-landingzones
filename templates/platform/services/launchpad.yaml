@@ -76,6 +76,8 @@ launchpad:
           account_tier: Standard
           shared_access_key_enabled: false
           account_replication_type: GRS
+          public_network_access_enabled: true
+          allow_nested_items_to_be_public: false
           blob_properties:
             versioning_enabled: true
             last_access_time_enabled: true
@@ -92,7 +94,6 @@ launchpad:
               - Metrics
               - AzureServices
             default_action: Deny
-            public_network_access_enabled: true
 {% if PUBLIC_IP_WHITE_LIST is defined %}
             ip_rules:
 {% for ip in PUBLIC_IP_WHITE_LIST %}
@@ -137,6 +138,8 @@ launchpad:
           account_tier: Standard
           shared_access_key_enabled: false
           account_replication_type: GRS
+          public_network_access_enabled: true
+          allow_nested_items_to_be_public: false
           blob_properties:
             versioning_enabled: true
             last_access_time_enabled: true
@@ -153,7 +156,6 @@ launchpad:
               - Metrics
               - AzureServices
             default_action: Deny
-            public_network_access_enabled: true
 {% if PUBLIC_IP_WHITE_LIST is defined %}
             ip_rules:
 {% for ip in PUBLIC_IP_WHITE_LIST %}
@@ -198,6 +200,8 @@ launchpad:
           account_tier: Standard
           shared_access_key_enabled: false
           account_replication_type: GRS
+          public_network_access_enabled: true
+          allow_nested_items_to_be_public: false
           blob_properties:
             versioning_enabled: true
             last_access_time_enabled: true
@@ -214,7 +218,6 @@ launchpad:
               - Metrics
               - AzureServices
             default_action: Deny
-            public_network_access_enabled: true
 {% if PUBLIC_IP_WHITE_LIST is defined %}
             ip_rules:
 {% for ip in PUBLIC_IP_WHITE_LIST %}

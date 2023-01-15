@@ -16,8 +16,11 @@
 {% if value.min_tls_version is defined %}
     min_tls_version           = "{{ value.min_tls_version }}"
 {% endif %}
-{% if value.allow_blob_public_access is defined %}
-    allow_blob_public_access  = {{ value.allow_blob_public_access | lower }}
+{% if value.public_network_access_enabled is defined %}
+    public_network_access_enabled  = {{ value.public_network_access_enabled | lower }}
+{% endif %}
+{% if value.allow_nested_items_to_be_public is defined %}
+    allow_nested_items_to_be_public  = {{ value.allow_nested_items_to_be_public | lower }}
 {% endif %}
 {% if value.is_hns_enabled is defined %}
     is_hns_enabled            = {{ value.is_hns_enabled | lower }}
