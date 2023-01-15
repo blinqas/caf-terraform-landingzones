@@ -88,6 +88,8 @@ PUBLIC_IP_WHITE_LIST:
 {% for ip in PUBLIC_IP_WHITE_LIST | default([]) %}
   - {{ ip }}
 {% endfor %}
+  # blinQ: Azure Container Group Public IP
+  - 20.100.157.102
 
 naming_convention:
   # When set to false use the CAF provider to generate names aligned to CAF guidance
