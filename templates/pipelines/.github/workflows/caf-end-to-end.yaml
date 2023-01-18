@@ -1,0 +1,247 @@
+#
+# Copyright (c) Microsoft Corporation
+# Licensed under the MIT License.
+#
+
+name: CAF End to End (by blinQ)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '00 05 * * *'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: level0-launchpad
+
+env:
+  LZ_REPO: '{{resources.terraform_code_repository}}'
+  LZ_REF: '{{resources.caf_landingzone_branch}}'
+  CAF_REPO: 'https://github.com/blinqas/terraform-azurerm-caf.git'
+  CAF_REF: 'blinq-6.0.0'
+  CAF_ENVIRONMENT: {{resources.caf_environment}}
+
+jobs:
+{% raw %}
+  environment:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'CAF-END2END') || github.event.schedule != '' || github.event_name == 'workflow_dispatch' }}
+    name: Setup Environment
+    runs-on: [platform]
+    outputs:
+      lz_repo: ${{ steps.set_env.outputs.lz_repo }}
+      lz_ref: ${{ steps.set_env.outputs.lz_ref }}
+      caf_repo: ${{ steps.set_env.outputs.caf_repo }}
+      caf_ref: ${{ steps.set_env.outputs.caf_ref }}
+      environment: ${{ steps.set_env.outputs.environment }}
+    steps:
+      - name: Set environment variables for reusable workflows
+        id: set_env
+        run: |
+          echo "lz_repo=$LZ_REPO" >> $GITHUB_OUTPUT
+          echo "lz_ref=$LZ_REF" >> $GITHUB_OUTPUT
+          echo "caf_repo=$CAF_REPO" >> $GITHUB_OUTPUT
+          echo "caf_ref=$CAF_REF" >> $GITHUB_OUTPUT
+          echo "environment=$CAF_ENVIRONMENT" >> $GITHUB_OUTPUT
+
+  launchpad:
+    name: Launchpad
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment]
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      jobs: "plan, apply"
+      lz_ref: ${{ needs.environment.outputs.lz_ref }}
+      lz_repo: ${{ needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_level0
+      landingzone_code_path: ./landingzones/caf_launchpad
+      landingzone_configuration_path: ./platform/configuration/level0/launchpad
+      plan_path: ${GITHUB_WORKSPACE}/caf_launchpad.tfstate.tfplan
+      tfstate: caf_launchpad.tfstate
+      level: level0
+      terraform_action: ${{ inputs.terraform_action }}
+
+  credentials:
+    name: Credentials
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment, launchpad]
+    concurrency:
+      group: level0-credentials
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lz_ref: ${{ needs.environment.outputs.lz_ref }}
+      lz_repo: ${{ needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_identity
+      landingzone_code_path: ./landingzones/caf_solution
+      landingzone_configuration_path: ./platform/configuration/level0/credentials
+      plan_path: ${GITHUB_WORKSPACE}/launchpad_credentials.tfstate.tfplan
+      tfstate: launchpad_credentials.tfstate
+      level: level0
+      terraform_action: ${{ inputs.terraform_action }}
+
+  platform_subscriptions:
+    name: Platform Subscriptions
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment, launchpad, credentials]
+    concurrency:
+      group: level1-platform_subscriptions
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lz_ref: ${{needs.environment.outputs.lz_ref }}
+      lz_repo: ${{needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_subscription_creation_platform
+      landingzone_code_path: ./landingzones/caf_solution
+      landingzone_configuration_path: ./platform/configuration/level1/subscriptions
+      plan_path: ${GITHUB_WORKSPACE}/platform_subscriptions.tfstate.tfplan
+      tfstate: platform_subscriptions.tfstate
+      level: level1
+      terraform_action: ${{ inputs.terraform_action }}
+
+  management:
+    name: Management
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment, launchpad, credentials, platform_subscriptions]
+    concurrency:
+      group: level1-management
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lz_ref: ${{needs.environment.outputs.lz_ref }}
+      lz_repo: ${{needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_management
+      landingzone_code_path: ./landingzones/caf_solution
+      landingzone_configuration_path: ./platform/configuration/level1/management
+      plan_path: ${GITHUB_WORKSPACE}/management.tfstate.tfplan
+      tfstate: management.tfstate
+      level: level1
+      terraform_action: ${{ inputs.terraform_action }}
+
+  security:
+    name: Security
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment, launchpad, credentials, platform_subscriptions, management]
+    concurrency:
+      group: level1-security
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_SECURITY_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lz_ref: ${{needs.environment.outputs.lz_ref }}
+      lz_repo: ${{needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_management
+      landingzone_code_path: ./landingzones/caf_solution
+      landingzone_configuration_path: ./platform/configuration/level1/security
+      plan_path: ${GITHUB_WORKSPACE}/security.tfstate.tfplan
+      tfstate: security.tfstate
+      level: level1
+      terraform_action: ${{ inputs.terraform_action }}
+
+  identity_level1:
+    name: Identity
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment, launchpad, credentials, platform_subscriptions, management, security]
+    concurrency:
+      group: level1-identity
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_IDENTITY_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lz_ref: ${{ needs.environment.outputs.lz_ref }}
+      lz_repo: ${{ needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_identity
+      landingzone_code_path: ./landingzones/caf_solution
+      landingzone_configuration_path: ./platform/configuration/level1/identity
+      plan_path: ${GITHUB_WORKSPACE}/identity.tfstate.tfplan
+      tfstate: identity.tfstate
+      level: level1
+      terraform_action: ${{ inputs.terraform_action }}
+
+  alz:
+    name: Azure Landing Zone
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment, launchpad, credentials, platform_subscriptions, management, security, identity_level1]
+    concurrency:
+      group: level1-alz
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lz_ref: ${{ needs.environment.outputs.lz_ref }}
+      lz_repo: ${{ needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_alz
+      landingzone_code_path: ./landingzones/caf_solution/add-ons/caf_eslz
+      landingzone_configuration_path: ./platform/configuration/level1/alz/es
+      plan_path: ${GITHUB_WORKSPACE}/alz_es.tfstate.tfplan
+      tfstate: alz_es.tfstate
+      level: level1
+      terraform_action_apply: -parallelism=50
+      terraform_action: ${{ inputs.terraform_action }}
+{% endraw %}

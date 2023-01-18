@@ -3,19 +3,31 @@
 # Licensed under the MIT License.
 #
 
-name: "Run terraform with CAF rover"
+name: "Rover (by blinQ)"
 
 on:
   workflow_call:
     inputs:
+      jobs:
+        default: "*"
+        type: string
+        required: false
       bootstrap:
         default: false
         type: boolean
-      terraform_code_repository:
-        description: "Git repository of the the terraform entry code."
+      lz_repo:
+        description: "Git repository of the the terraform azure caf landing zone code."
         required: false
         type: string
-      terraform_code_ref:
+      lz_ref:
+        description: "Tag or branch name."
+        required: false
+        type: string
+      caf_repo:
+        description: "Git repository of the the terraform azure caf module."
+        required: false
+        type: string
+      caf_ref:
         description: "Tag or branch name."
         required: false
         type: string
@@ -93,14 +105,19 @@ env:
   TF_REGISTRY_CLIENT_TIMEOUT: 15
   ROVER_RUNNER: true
 
-{% raw %}
+
 jobs:
-  rover:
-    name: ${{ inputs.level }}
-    runs-on: [self-hosted, platform]
-    
+{% raw %}
+  plan:
+    name: Rover Plan ${{ inputs.tfstate }}
+    if: contains(inputs.jobs, 'plan')
+    runs-on: [platform]
+    outputs:
+      apply: ${{ steps.status.outputs.apply }}
+      verify: ${{ steps.status.outputs.verify }}
+
     steps:
-      
+
       - name: 'Azure Login'
         uses: azure/login@v1
         with:
@@ -115,14 +132,20 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: checkout base terraform landingzone code
+      - name: Checkout Terraform Azure CAF Landing Zone
         shell: bash
         run: |
           rm -rf ./landingzones
-          git clone --branch ${{ inputs.terraform_code_ref }} --single-branch ${{ inputs.terraform_code_repository }} ./landingzones
-      
-      - id: generate-rover-command
-        if: inputs.terraform_action == 'plan_apply'
+          git clone --branch ${{ inputs.lz_ref }} --single-branch ${{ inputs.lz_repo }} ./landingzones
+
+      - name: Checkout Terraform Azure CAF Modules
+        shell: bash
+        run: |
+          git clone --branch ${{ inputs.caf_ref }} --single-branch ${{ inputs.caf_repo }} ./landingzones/azure-caf-modules
+
+      - name: Generate Rover commands
+        id: generate-rover-command
+        if: inputs.terraform_action == 'plan_apply' || inputs.terraform_action == 'apply' || inputs.terraform_action == 'plan'
         shell: bash
         run: |
           echo "Retreiving keyvault for credentials"
@@ -138,8 +161,8 @@ jobs:
           set +e
 
           rover=("/tf/rover/rover.sh ")
-          action_plan=("-a plan ${{inputs.terraform_action_plan }} ")
-          action_apply=("-a apply ${{inputs.terraform_action_apply }} ")
+          action_plan=("-a plan ${{ inputs.terraform_action_plan }} ")
+          action_apply=("-a apply ${{ inputs.terraform_action_apply }} ")
           landingzone_code_path=("-lz $(readlink -f ${{inputs.landingzone_code_path}}) ")
           landingzone_configuration_path=("-var-folder $(readlink -f ${{inputs.landingzone_configuration_path}}) ")
           tfstate_subscription_id=("-tfstate_subscription_id ${{secrets.AZURE_LAUNCHPAD_SUBSCRIPTION_ID}} ")
@@ -149,7 +172,7 @@ jobs:
           level=("-level ${{inputs.level}} ")
           output_file=$(readlink -f ./${{inputs.tfstate}}.output)
           output=("--output ${output_file} ")
-          
+
           if [ "${{inputs.launchpad}}" = "true" ]; then
             launchpad=("-launchpad ")
           fi
@@ -159,12 +182,32 @@ jobs:
 
           command_plan="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}${plan_path[@]}${output[@]}${action_plan[@]}${{inputs.terraform_action_plan}}"
           command_apply="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}"
-          
+
           echo "rover-command-plan=$(echo ${command_plan})" >> $GITHUB_OUTPUT
           echo "rover-command-apply=$(echo ${command_apply})" >> $GITHUB_OUTPUT
           echo "output_file=$(echo ${output_file})" >> $GITHUB_OUTPUT
 
-      - id: plan
+          echo "This is the rover command plan:"
+          eval echo $command_plan | tee ${{ inputs.tfstate }}.rover-command-plan
+          echo "This is the rover command apply:"
+          eval echo $command_apply | tee ${{ inputs.tfstate }}.rover-command-apply
+
+      - uses: actions/upload-artifact@v3
+        name: Upload artifact rover command plan
+        if: always()
+        with:
+          name: ${{ inputs.tfstate }}.rover-command-plan
+          path: ${{ inputs.tfstate }}.rover-command-plan
+
+      - uses: actions/upload-artifact@v3
+        name: Upload artifact rover command apply
+        if: always()
+        with:
+          name: ${{ inputs.tfstate }}.rover-command-apply
+          path: ${{ inputs.tfstate }}.rover-command-apply
+
+      - id: status
+        if: (contains(inputs.terraform_action, 'plan'))
         name: Execute terraform plan
         shell: bash
         run: |
@@ -220,19 +263,25 @@ jobs:
 
           echo "apply=$(echo ${apply})" >> $GITHUB_OUTPUT
           echo "verify=$(echo ${verify})" >> $GITHUB_OUTPUT
-          echo "plan_file=${plan_file}" >> $GITHUB_OUTPUT
+          echo "plan_file=$(echo ${plan_file})" >> $GITHUB_OUTPUT
 
-      - id: apply
-        if: (inputs.terraform_action == 'plan_apply') && (steps.plan.outputs.apply == 'true')
-        name: Execute terraform apply
+      - uses: actions/upload-artifact@v3
+        name: Upload artifact terraform plan
+        if: always()
+        with:
+          name: ${{ inputs.tfstate }}.tfplan
+          path: ${{ inputs.tfstate }}.tfplan
+
+      - uses: actions/upload-artifact@v3
+        name: Upload artifact terraform plan output
+        if: always()
+        with:
+          name: ${{ inputs.tfstate }}.output
+          path: ${{ inputs.tfstate }}.output
+
+      - name: Wait 2 seconds for artifacts to be uploaded
         shell: bash
-        run: |
-
-          plan_path=("-p ${{ steps.plan.outputs.plan_file }} ")
-          action=("-a apply ")
-          command_apply="${{ steps.generate-rover-command.outputs.rover-command-apply }} ${plan_path[@]}${action[@]}${{inputs.terraform_action_apply}}"
-          echo ${command_apply}
-          eval ${command_apply}
+        run: sleep 2
 
       - name: Cleanup
         if: always()
@@ -244,4 +293,94 @@ jobs:
           rm -rf ${{inputs.tfstate}}
           rm -rf ${{inputs.plan_path}}
 
+  approval:
+    if: ${{ contains(inputs.jobs, 'approval') || ( github.event_name == 'pull_request' && inputs.tfstate == 'alz.tfstate' ) }} # We only run approval job when this is a pull_request and when all plans are finnished (alz.tfsate is the last plan in platform)
+    name: Customer Merge Approval
+    needs: [plan]
+    runs-on: [platform]
+    environment: prod-merge
+    steps:
+      - name: Wait for merge approval by customer
+        shell: bash
+        run: |
+          echo "Review event is: " ${{ github.event.review }}
+
+  apply:
+    if: needs.plan.outputs.apply == 'true'
+    name: Rover Apply ${{ inputs.tfstate }}
+    needs: [plan]
+    environment: prod-apply
+    runs-on: [platform]
+
+    steps:
+
+      - name: 'Azure Login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_LAUNCHPAD_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+
+      - uses: actions/download-artifact@v3
+        id: file_tfplan
+        name: Download artifact terraform plan
+        with:
+          name: ${{ inputs.tfstate }}.tfplan
+          path: ./
+
+      - uses: actions/download-artifact@v3
+        id: file_tfplan_output
+        name: Download artifact terraform plan output
+        with:
+          name: ${{ inputs.tfstate }}.output
+          path: ./
+
+      - uses: actions/download-artifact@v3
+        id: file_rover_command_plan
+        name: Download artifact rover command plan
+        with:
+          name: ${{ inputs.tfstate }}.rover-command-plan
+          path: ./
+
+      - uses: actions/download-artifact@v3
+        id: file_rover_command_apply
+        name: Download artifact rover command apply
+        with:
+          name: ${{ inputs.tfstate }}.rover-command-apply
+          path: ./
+
+      - id: apply
+        if: ( inputs.terraform_action == 'apply' || ( inputs.terraform_action == 'plan_apply' && needs.plan.outputs.apply == 'true') )
+        name: Execute terraform apply
+        shell: bash
+        run: |
+
+          plan_path=("-p $GITHUB_WORKSPACE/${{ inputs.tfstate }}.tfplan ")
+          action=("-a apply ")
+          command_apply_file="${{ steps.file_rover_command_apply.outputs.download-path }}/${{ inputs.tfstate }}.rover-command-apply"
+          command_apply="$(cat $command_apply_file) ${plan_path[@]}${action[@]}${{ inputs.terraform_action_apply }}"
+          echo ${command_apply}
+          eval ${command_apply}
+
+  cleanup:
+    if: always()
+    name: Cleanup Artifacts and Files
+    runs-on: [platform]
+
+    steps:
+
+      - name: Cleanup
+        if: always()
+        run: |
+          az account clear
+          echo "Azure session closed."
+          rm -rf outputfile
+          rm -rf "$(readlink -f ${{inputs.tfstate}}.output)"
+          rm -rf ${{inputs.tfstate}}
+          rm -rf ${{inputs.plan_path}}
+
+      - uses: geekyeggo/delete-artifact@v2
+        with:
+          name: "${{ inputs.tfstate }}*"
 {% endraw %}

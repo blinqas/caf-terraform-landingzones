@@ -1,0 +1,75 @@
+#
+# Copyright (c) Microsoft Corporation
+# Licensed under the MIT License.
+#
+name: CAF L1-2 Management (by blinQ)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    types: [labeled]
+
+concurrency:
+  group: CAF-L1
+
+env:
+  LZ_REPO: '{{resources.terraform_code_repository}}'
+  LZ_REF: '{{resources.caf_landingzone_branch}}'
+  CAF_REPO: 'https://github.com/blinqas/terraform-azurerm-caf.git'
+  CAF_REF: 'blinq-6.0.0'
+  CAF_ENVIRONMENT: {{resources.caf_environment}}
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+{% raw %}
+  environment:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'CAF-L1-MANAGEMENT') || github.event.schedule != '' || github.event_name == 'workflow_dispatch' }}
+    name: Setup Environment
+    runs-on: [platform]
+    outputs:
+      lz_repo: ${{ steps.set_env.outputs.lz_repo }}
+      lz_ref: ${{ steps.set_env.outputs.lz_ref }}
+      caf_repo: ${{ steps.set_env.outputs.caf_repo }}
+      caf_ref: ${{ steps.set_env.outputs.caf_ref }}
+      environment: ${{ steps.set_env.outputs.environment }}
+    steps:
+      - name: Set environment variables for reusable workflows
+        id: set_env
+        run: |
+          echo "lz_repo=$LZ_REPO" >> $GITHUB_OUTPUT
+          echo "lz_ref=$LZ_REF" >> $GITHUB_OUTPUT
+          echo "caf_repo=$CAF_REPO" >> $GITHUB_OUTPUT
+          echo "caf_ref=$CAF_REF" >> $GITHUB_OUTPUT
+          echo "environment=$CAF_ENVIRONMENT" >> $GITHUB_OUTPUT
+
+  management:
+    name: Management
+    uses: blinqas/azlz-workflows/.github/workflows/rover-by-blinq.yaml@main
+    needs: [environment]
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+      AZURE_TARGET_SUBSCRIPTION_ID: ${{ secrets.AZURE_MANAGEMENT_SUBSCRIPTION_ID }}
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      lz_ref: ${{needs.environment.outputs.lz_ref }}
+      lz_repo: ${{needs.environment.outputs.lz_repo }}
+      caf_ref: ${{ needs.environment.outputs.caf_ref }}
+      caf_repo: ${{ needs.environment.outputs.caf_repo }}
+      environment: ${{ needs.environment.outputs.environment }}
+      caf_identity_aad_key: cred_management
+      landingzone_code_path: ./landingzones/caf_solution
+      landingzone_configuration_path: ./platform/configuration/level1/management
+      plan_path: ${GITHUB_WORKSPACE}/management.tfstate.tfplan
+      tfstate: management.tfstate
+      level: level1
+      terraform_action: plan_apply
+{% endraw %}

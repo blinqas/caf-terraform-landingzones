@@ -1,0 +1,36 @@
+#
+# Copyright (c) Microsoft Corporation
+# Licensed under the MIT License.
+#
+
+name: blinQ test workflow
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '00 11 * * *'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  LZ_REPO: '{{resources.terraform_code_repository}}'
+  LZ_REF: '{{resources.caf_landingzone_branch}}'
+  CAF_REPO: 'https://github.com/blinqas/terraform-azurerm-caf.git'
+  CAF_REF: 'blinq-6.0.0'
+  CAF_ENVIRONMENT: {{resources.caf_environment}}
+
+jobs:
+{% raw %}
+  debugme:
+    name: Debug activities
+    runs-on: [platform]
+    steps:
+      - name: Shell debug
+        run: |
+          echo "Schedule event contains this: " ${{ github.event.schedule }}
+          echo "Dispatch event contains this: " ${{ github.event.workflow_dispatch }}
+          echo "Event name is: " ${{ github.event_name }}
+          echo "Event contains this: " ${{ github.event.* }}
+{% endraw %}
