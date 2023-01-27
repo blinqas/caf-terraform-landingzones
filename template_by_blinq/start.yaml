@@ -1,0 +1,24 @@
+- name: Copy template files and replace variables
+  hosts: localhost
+  vars_files:
+    - "ignite.yaml"
+  tasks:
+    - name: Copy template files
+      synchronize:
+        src: "{{ template_folder }}"
+        dest: "{{ destination_folder }}"
+        remote_src: true
+    - name: Find and register all tfvars files
+      find:
+        paths: "{{ destination_folder }}"
+        patterns: "*.tfvars"
+      register: tfvars_files
+    - name: Replace variables in tfvars files
+      lineinfile:
+        path: "{{ item.path }}"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items: "{{ tfvars_files.files | json_query('[].path') | 
+                   zip(tfvars_files.files | json_query('[].content') | 
+                   map('regex_replace', '\\{\{(.*?)\\}\\}', lookup('vars', '\\1')) | 
+                   list) | list }}"

@@ -1,0 +1,17 @@
+- name: Retrieve Azure AD object IDs
+  hosts: localhost
+  gather_facts: false
+  vars:
+    upn1: "{{ lookup('env', 'USERNAME') }}"
+    upn2: "caf-group-owner@contoso.onmicrosoft.com"
+  tasks:
+    - name: Retrieve object ID of logged in user
+      command: az ad user show --upn-or-object-id "{{ upn1 }}" --query objectId
+      register: logged_in_user_object_id
+    - name: Retrieve object ID of specified user
+      command: az ad user show --upn-or-object-id "{{ upn2 }}" --query objectId
+      register: specified_user_object_id
+    - name: Set variables
+      set_fact:
+        logged_in_user_object_id: "{{ logged_in_user_object_id.stdout }}"
+        specified_user_object_id: "{{ specified_user_object_id.stdout }}"
