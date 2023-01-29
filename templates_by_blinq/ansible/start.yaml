@@ -1,0 +1,66 @@
+- name: Copy template files and replace variables
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  
+    - name: Install rsync
+      ansible.builtin.apt:
+        name: rsync
+        state: present
+
+    - set_fact:
+        base_folder: "{{ base_folder | default('/tf/caf') }}"
+
+    - set_fact:
+        template_base_folder: "{{ base_folder }}/landingzones/templates_by_blinq"
+        template_folder: "{{ base_folder }}/landingzones/templates_by_blinq/{{ template | default('template1') }}/"
+        configuration_folder: "{{ base_folder }}/{{ destination_folder | default('configuration_new') }}"
+
+    - name: Base folder
+      debug:
+        msg: "Base folder: {{ base_folder | default('/tf/caf')}}"
+
+    - name: Output facts
+      debug:
+        msg: "Configuration folder is: {{ configuration_folder  }}"
+
+    - name: Copy template files from landing zone folder to local folder
+      synchronize:
+        src: "{{ template_folder }}"
+        dest: "{{ configuration_folder }}"
+        delete: yes
+        recursive: yes        
+
+    - name: Include tasks in dynamic.yaml to generate all dynamic variables
+      include_tasks: "{{ template_base_folder }}/ansible/dynamic.yaml"
+
+    - name: Update local ignite.yaml with dynamic variables
+      ansible.builtin.template:
+        src: "{{ template_base_folder }}/ansible/ignite.yaml"
+        dest: "{{ configuration_folder }}/ignite.yaml"  
+
+    - name: Include variables from local ignite.yaml
+      include_vars:
+        name: ignite
+        file: "{{ configuration_folder }}/ignite.yaml"
+
+    - find:
+        paths: "{{ configuration_folder }}"
+        recurse: yes
+        patterns: "*.j2"
+        file_type: file
+      register: jinja2_files
+
+    - name: Process jinja2 files
+      ansible.builtin.template:
+        src: "{{ item.path }}"
+        dest: "{{ item.path  | regex_replace('.j2$', '') }}"
+      loop: "{{ jinja2_files.files }}"
+
+
+
+
+
+
+
+      

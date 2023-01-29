@@ -1,0 +1,40 @@
+global:
+  env: {{ env }}
+  onmicrosoft_domain: {{ onmicrosoft_domain.stdout }}
+  subscriptions:
+    sub_management: {{ sub_management | default(azlz_management.stdout | default('<input sub_management variable with subscription id to ansible, or create subscription with name azlz_management>')) }}
+    sub_connectivity: {{ sub_management | default(azlz_connectivity.stdout | default('<input sub_connectivity variable with subscription id to ansible, or create subscription with name azlz_connectivity>')) }}
+    sub_identity: {{ sub_identity | default(azlz_identity.stdout | default('<input sub_identity variable with subscription id to ansible, or create subscription with name azlz_identity>')) }}
+    sub_security: {{ sub_security | default(azlz_security.stdout | default('<input sub_security variable with subscription id to ansible, or create subscription with name azlz_security>')) }}
+    sub_sandbox: {{ sub_sandbox | default(azlz_sandbox.stdout | default('<input sub_sandbox variable with subscription id to ansible, or create subscription with name azlz_sandbox>')) }}
+  cred_keyvaults:
+    cred_level0: {{ cred_level0.stdout | default("<cred_level0 not deployed>")}}
+    cred_management: {{ cred_management.stdout | default("<cred_management not deployed>")}}
+    cred_identity: {{ cred_identity.stdout | default("<cred_identity not deployed>")}}
+    cred_security: {{ cred_security.stdout | default("<cred_security not deployed>")}}
+    cred_connectivity: {{ cred_connectivity.stdout | default("<cred_connectivity not deployed>")}}    
+    cred_alz: {{ cred_alz.stdout | default("<cred_alz not deployed>")}}
+    cred_ea_account_owner: {{ cred_ea_account_owner.stdout | default("<cred_ea_account_owner not deployed>")}}
+    cred_subscription_creation_platform: {{ cred_subscription_creation_platform.stdout | default("<cred_subscription_creation_platform not deployed>")}}
+    cred_subscription_creation_landingzones: {{ cred_subscription_creation_landingzones.stdout | default("<cred_subscription_creation_landingzones not deployed>")}}
+
+  ip_whitelist:
+    - {{ public_ip.stdout }}
+  ip_whitelist_with_mask_32:
+    - "{{ public_ip.stdout }}/32"
+  logged_in_sp_object_id: {{ logged_in_sp_object_id.stdout }}
+  azuread_groups:
+    owners:
+      - {{ caf_group_owner_object_id.stdout }}
+      - {{ logged_in_sp_object_id.stdout }}
+
+
+level0:
+  launchpad:
+    azuread_groups:
+      members:
+        - {{ caf_group_owner_object_id.stdout }}
+        - {{ logged_in_sp_object_id.stdout }}
+      owners:
+        - {{ caf_group_owner_object_id.stdout }}
+        - {{ logged_in_sp_object_id.stdout }} 
