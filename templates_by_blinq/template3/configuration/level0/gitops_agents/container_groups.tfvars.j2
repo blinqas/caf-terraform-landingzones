@@ -1,17 +1,18 @@
 container_groups = {
-  blinq = {
+  {{ ignite.global.caf_environment }} = {
     containers = {
-      rover_blinq = {
+      rover_{{ ignite.global.caf_environment }} = {
         cpu = 3
         environment_variables = {
-          AGENT_NAME   = "rover-blinq"
-          LABELS       = "rover-blinq, platform"
+          AGENT_NAME   = "rover-{{ ignite.global.caf_environment }}"
+          LABELS       = "rover-{{ ignite.global.caf_environment }}"
+          LABELS       = "platform"
           ROVER_RUNNER = true
-          URL          = "https://github.com/blinqas/azlz-{{ ignite.global.caf_environment }}"
+          URL          = "https://github.com/{{ ignite.global.caf_environment }}as/azlz-{{ ignite.global.caf_environment }}"
         }
         image  = "aztfmod/rover-agent:1.3.6-2212.011747-preview-github"
         memory = 3
-        name   = "rover-blinq"
+        name   = "rover-{{ ignite.global.caf_environment }}"
         ports = {
           ssh = {
             port     = 22
@@ -19,12 +20,12 @@ container_groups = {
           }
         }
         secure_variables_from_command = {
-          AGENT_TOKEN = "gh api --method POST -H 'Accept: application/vnd.github.v3+json' /repos/blinqas/azlz-{{ ignite.global.caf_environment }}/actions/runners/registration-token | jq -r ' {value: .token}'"
+          AGENT_TOKEN = "gh api --method POST -H 'Accept: application/vnd.github.v3+json' /repos/{{ ignite.global.caf_environment }}as/azlz-{{ ignite.global.caf_environment }}/actions/runners/registration-token | jq -r ' {value: .token}'"
         }
       }
     }
     ip_address_type = "Private"
-    name            = "rover-blinq"
+    name            = "rover-{{ ignite.global.caf_environment }}"
     os_type         = "Linux"
     region          = "region1"
     resource_group = {

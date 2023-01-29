@@ -472,7 +472,7 @@ keyvaults = {
     sku_name                 = "standard"
     purge_protection_enabled = true
     tags = {
-      caf_environment      = {{ ignite.global.caf_environment }}
+      caf_environment      = "{{ ignite.global.caf_environment }}"
       caf_identity_aad_key = "landingzones"
     }
     creation_policies = {
