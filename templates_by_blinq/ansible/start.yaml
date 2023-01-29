@@ -35,7 +35,6 @@
           - "Template base folder is: {{ template_base_folder }}"
           - "Template folder is: {{ template_folder }}"          
           - "Configuration folder is: {{ configuration_folder }}"
-          - "Template folder is: {{ template_folder }}"          
           - "Backup folder is: {{ backup_folder }}"
   
     - name: Check if configuration folder exists
@@ -52,22 +51,39 @@
       debug:
         msg: "{{ move_result }}"
 
-    - name: Copy template files from landing zone folder to local folder
+    - name: Copy configuration files from landing zone folder to local folder
       synchronize:
-        src: "{{ template_folder }}"
+        src: "{{ template_folder }}/configuration/"
         dest: "{{ configuration_folder }}"
         delete: yes
         recursive: yes
       when: move_result.changed == false or move_result.rc == 0
-      register: copy_result
+      register: copy_config_result
 
-    - name: Copy result
+    - name: Copy config result
       debug:
-        msg: "{{ copy_result }}"
+        msg: "{{ copy_config_result }}"
 
     - name: Include tasks in dynamic.yaml to generate all dynamic variables
       include_tasks: "{{ template_base_folder }}/ansible/dynamic.yaml"
-      when: copy_result.failed == false
+      when: copy_config_result.failed == false
+      register: dynamics_result
+
+    - name: Copy GitHub actions workflow files from landing zone folder to local folder
+      synchronize:
+        src: "{{ template_folder }}/.github/workflows/"
+        dest: "{{ base_folder }}/.github/workflows/"
+        delete: no
+        recursive: no
+      register: copy_workflows_result
+
+    - name: Copy workflows result
+      debug:
+        msg: "{{ copy_workflows_result }}"
+
+    - name: Include tasks in dynamic.yaml to generate all dynamic variables
+      include_tasks: "{{ template_base_folder }}/ansible/dynamic.yaml"
+      when: copy_config_result.failed == false
       register: dynamics_result
 
     - name: Dynamics result
@@ -76,7 +92,7 @@
 
     - name: Include tasks in inputs.yaml
       include_tasks: "{{ template_base_folder }}/ansible/inputs.yaml"
-      when: copy_result.failed == false
+      when: copy_config_result.failed == false
       register: inputs_result
 
     - name: Input result
@@ -117,6 +133,21 @@
         src: "{{ item.path }}"
         dest: "{{ item.path  | regex_replace('.j2$', '') }}"
       loop: "{{ jinja2_files.files }}"
+
+    - find:
+        paths: "{{ base_folder }}/.github/workflows/"
+        recurse: yes
+        patterns: ["*.j2"]
+        file_type: file
+      register: workflow_files
+
+    - name: Process GitHub actions workflows
+      ansible.builtin.template:
+      src: "{{ item.path }}"
+      dest: "{{ item.path  | regex_replace('.j2$', '') }}"
+      loop: "{{ workflow_files.files }}"
+
+      
 
 
 
