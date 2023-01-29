@@ -1,0 +1,13 @@
+- name: Azure Regions
+  set_fact:
+    azure_regions: "{{ azure_regions | default({'region1': 'westeurope', 'region2': 'norwayeast'})}}"
+
+- name: Azure Regions List
+  set_fact:
+    azure_regions_list: "{{ azure_regions.values() | list }}"
+
+- name: Default email addresses
+  set_fact:
+    security_email_address: "{{ security_email_address | default('support@blinq.no') }}"
+    noc_email_address: "{{ noc_email_address | default('support@blinq.no') }}"
+

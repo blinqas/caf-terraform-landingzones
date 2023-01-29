@@ -8,6 +8,14 @@
         name: rsync
         state: present
 
+    - name: Get current date and time
+      command: date +"%Y-%m-%d_%H-%M-%S"
+      register: current_datetime
+
+    - name: Current date and time is
+      debug:
+        msg: "Current date and time is: {{ current_datetime.stdout }}"
+
     - set_fact:
         base_folder: "{{ base_folder | default('/tf/caf') }}"
 
@@ -15,39 +23,92 @@
         template_base_folder: "{{ base_folder }}/landingzones/templates_by_blinq"
         template_folder: "{{ base_folder }}/landingzones/templates_by_blinq/{{ template | default('template1') }}/"
         configuration_folder: "{{ base_folder }}/{{ destination_folder | default('configuration_new') }}"
+    
+    - set_fact:
+        backup_folder: "{{ configuration_folder }}_backup_{{ current_datetime.stdout }}"
 
-    - name: Base folder
+    - name: Folders that will be used
       debug:
-        msg: "Base folder: {{ base_folder | default('/tf/caf')}}"
+        msg:
+          - "Destination folder is: {{ destination_folder }}"
+          - "Base folder: {{ base_folder | default('/tf/caf')}}"
+          - "Template base folder is: {{ template_base_folder }}"
+          - "Template folder is: {{ template_folder }}"          
+          - "Configuration folder is: {{ configuration_folder }}"
+          - "Template folder is: {{ template_folder }}"          
+          - "Backup folder is: {{ backup_folder }}"
+  
+    - name: Check if configuration folder exists
+      stat:
+        path: "{{ configuration_folder }}"
+      register: folder_stat
 
-    - name: Output facts
+    - name: Move existing configuration folder to backup folder
+      shell: mv {{ configuration_folder }} {{ backup_folder }}
+      register: move_result
+      when: folder_stat.stat.exists
+
+    - name: Move result
       debug:
-        msg: "Configuration folder is: {{ configuration_folder  }}"
+        msg: "{{ move_result }}"
 
     - name: Copy template files from landing zone folder to local folder
       synchronize:
         src: "{{ template_folder }}"
         dest: "{{ configuration_folder }}"
         delete: yes
-        recursive: yes        
+        recursive: yes
+      when: move_result.changed == false or move_result.rc == 0
+      register: copy_result
+
+    - name: Copy result
+      debug:
+        msg: "{{ copy_result }}"
 
     - name: Include tasks in dynamic.yaml to generate all dynamic variables
       include_tasks: "{{ template_base_folder }}/ansible/dynamic.yaml"
+      when: copy_result.failed == false
+      register: dynamics_result
+
+    - name: Dynamics result
+      debug:
+        msg: "{{ dynamics_result }}"
+
+    - name: Include tasks in inputs.yaml
+      include_tasks: "{{ template_base_folder }}/ansible/inputs.yaml"
+      when: copy_result.failed == false
+      register: inputs_result
+
+    - name: Input result
+      debug:
+        msg: "{{ inputs_result }}"
 
     - name: Update local ignite.yaml with dynamic variables
       ansible.builtin.template:
         src: "{{ template_base_folder }}/ansible/ignite.yaml"
-        dest: "{{ configuration_folder }}/ignite.yaml"  
+        dest: "{{ configuration_folder }}/ignite.yaml"
+      when: dynamics_result.changed == false
+      register: ignite_update_result
+
+    - name: Ignite update result
+      debug:
+        msg: "{{ ignite_update_result }}"
 
     - name: Include variables from local ignite.yaml
       include_vars:
         name: ignite
         file: "{{ configuration_folder }}/ignite.yaml"
+      when: ignite_update_result.failed == false
+      register: ignite_include
+
+    - name: Ignite include result
+      debug:
+        msg: "{{ ignite_include }}"
 
     - find:
         paths: "{{ configuration_folder }}"
         recurse: yes
-        patterns: "*.j2"
+        patterns: ["*.j2"]
         file_type: file
       register: jinja2_files
 

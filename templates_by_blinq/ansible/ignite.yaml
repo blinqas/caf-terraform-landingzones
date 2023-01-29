@@ -1,12 +1,24 @@
 global:
-  env: {{ env }}
+  caf_environment: {{ caf_environment }}
+  prefix: {{ prefix | default('alz') }}
+  azure_regions: {{ azure_regions }}
+  azure_regions_list: {{ azure_regions_list }}  
+  lz_repo: {{ lz_repo | default('https://github.com/blinqas/caf-terraform-landingzones')}}
+  lz_ref: {{ lz_ref | default('blinq-5.6.4')}}
+  caf_repo: {{ caf_repo | default('https://github.com/blinqas/terraform-azurerm-caf')}}
+  caf_ref: {{ caf_ref | default('blinq-5.6.4')}}
+  security_email_address: {{ security_email_address }}
+  noc_email_address: {{ noc_email_address }}
   onmicrosoft_domain: {{ onmicrosoft_domain.stdout }}
+  caf_group_owner: {{ caf_group_owner }}
+  
   subscriptions:
     sub_management: {{ sub_management | default(azlz_management.stdout | default('<input sub_management variable with subscription id to ansible, or create subscription with name azlz_management>')) }}
     sub_connectivity: {{ sub_management | default(azlz_connectivity.stdout | default('<input sub_connectivity variable with subscription id to ansible, or create subscription with name azlz_connectivity>')) }}
     sub_identity: {{ sub_identity | default(azlz_identity.stdout | default('<input sub_identity variable with subscription id to ansible, or create subscription with name azlz_identity>')) }}
     sub_security: {{ sub_security | default(azlz_security.stdout | default('<input sub_security variable with subscription id to ansible, or create subscription with name azlz_security>')) }}
     sub_sandbox: {{ sub_sandbox | default(azlz_sandbox.stdout | default('<input sub_sandbox variable with subscription id to ansible, or create subscription with name azlz_sandbox>')) }}
+  
   cred_keyvaults:
     cred_level0: {{ cred_level0.stdout | default("<cred_level0 not deployed>")}}
     cred_management: {{ cred_management.stdout | default("<cred_management not deployed>")}}
@@ -18,8 +30,16 @@ global:
     cred_subscription_creation_platform: {{ cred_subscription_creation_platform.stdout | default("<cred_subscription_creation_platform not deployed>")}}
     cred_subscription_creation_landingzones: {{ cred_subscription_creation_landingzones.stdout | default("<cred_subscription_creation_landingzones not deployed>")}}
 
+  folders:
+    destination_folder: {{ destination_folder }}
+    base_folder: {{ base_folder }}
+    template_base_folder: {{ template_base_folder }}
+    template_folder: {{ template_folder }}
+    configuration_folder: {{ configuration_folder }}
+    backup_folder: {{ backup_folder }}
+
   ip_whitelist:
-    - {{ public_ip.stdout }}
+    - "{{ public_ip.stdout }}"
   ip_whitelist_with_mask_32:
     - "{{ public_ip.stdout }}/32"
   logged_in_sp_object_id: {{ logged_in_sp_object_id.stdout }}
@@ -37,4 +57,13 @@ level0:
         - {{ logged_in_sp_object_id.stdout }}
       owners:
         - {{ caf_group_owner_object_id.stdout }}
-        - {{ logged_in_sp_object_id.stdout }} 
+        - {{ logged_in_sp_object_id.stdout }}
+
+level1:
+  alz:
+    customer_name: {{customer_name}}
+    caf_environment: {{caf_environment | default(env)}}
+    default_email_address: {{default_email_address | default('support@blinq.no')}}
+    minimalSeverity: {{minimalSeverity | default('Low')}}
+    alz_mg_prefix: {{alz_mg_prefix | default('es')}}
+    alz_mg_name: {{alz_mg_name | default('ALZ')}}

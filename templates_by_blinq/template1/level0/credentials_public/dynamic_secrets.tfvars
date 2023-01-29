@@ -14,7 +14,7 @@ dynamic_keyvault_secrets = {
     }
     tenant_id = {
       secret_name = "tenant-id"
-      value       = "31dc4007-d04f-4566-8f92-bd880e918424" # pridok.no Tenant
+      value       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
     }
   }*/
 
