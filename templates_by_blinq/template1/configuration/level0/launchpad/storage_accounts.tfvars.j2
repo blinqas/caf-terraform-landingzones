@@ -6,7 +6,7 @@ storage_accounts = {
     account_tier                    = "Standard"
     shared_access_key_enabled       = false
     account_replication_type        = "GRS"
-    public_network_access_enabled   = false
+    public_network_access_enabled   = true
     allow_nested_items_to_be_public = false
     blob_properties = {
       versioning_enabled       = true
@@ -21,38 +21,13 @@ storage_accounts = {
     network = {
       default_action = "Deny"
       bypass         = ["Logging", "Metrics", "AzureServices"]
-      ip_rules       = ["{{ ignite.global.ip_whitelist | join('\",\"') }}"]
-      subnets = {
-        level0 = {
-          lz_key     = "launchpad"
-          vnet_key   = "vnet_region1"
-          subnet_key = "level0"
-        }
-      }
+      ip_rules       = ["{{ ignite.global.ip_whitelist }}"]      
     }
     containers = {
       tfstate = {
         name = "tfstate"
       }
-    }
-    private_endpoints = {
-      level0 = {
-        name               = "stg-level0"
-        resource_group_key = "level0"
-        vnet_key           = "vnet_region1"
-        subnet_key         = "level0"
-        private_service_connection = {
-          name                 = "stg-level0-link"
-          is_manual_connection = false
-          subresource_names    = ["blob"]
-        }
-        private_dns = {
-          zone_group_name = "gitops"
-          lz_key          = "launchpad"
-          keys            = ["privatelink.blob.core.windows.net"]
-        }
-      }
-    }
+    }    
     tags = {
       caf_environment = "{{ ignite.global.caf_environment }}"
       caf_launchpad   = "launchpad"
@@ -66,7 +41,7 @@ storage_accounts = {
     account_tier                    = "Standard"
     shared_access_key_enabled       = false
     account_replication_type        = "GRS"
-    public_network_access_enabled   = false
+    public_network_access_enabled   = true
     allow_nested_items_to_be_public = false
     blob_properties = {
       versioning_enabled       = true
@@ -81,38 +56,13 @@ storage_accounts = {
     network = {
       default_action = "Deny"
       bypass         = ["Logging", "Metrics", "AzureServices"]
-      ip_rules       = ["{{ ignite.global.ip_whitelist | join('\",\"') }}"]
-      subnets = {
-        level1 = {
-          lz_key     = "launchpad"
-          vnet_key   = "vnet_region1"
-          subnet_key = "level1"
-        }
-      }
+      ip_rules       = ["{{ ignite.global.ip_whitelist }}"]      
     }
     containers = {
       tfstate = {
         name = "tfstate"
       }
-    }
-    private_endpoints = {
-      level1 = {
-        name               = "stg-level1"
-        resource_group_key = "level1"
-        vnet_key           = "vnet_region1"
-        subnet_key         = "level1"
-        private_service_connection = {
-          name                 = "stg-level1-link"
-          is_manual_connection = false
-          subresource_names    = ["blob"]
-        }
-        private_dns = {
-          zone_group_name = "gitops"
-          lz_key          = "launchpad"
-          keys            = ["privatelink.blob.core.windows.net"]
-        }
-      }
-    }
+    }    
     tags = {
       caf_environment = "{{ ignite.global.caf_environment }}"
       caf_launchpad   = "launchpad"
@@ -126,7 +76,7 @@ storage_accounts = {
     account_tier                    = "Standard"
     shared_access_key_enabled       = false
     account_replication_type        = "GRS"
-    public_network_access_enabled   = false
+    public_network_access_enabled   = true
     allow_nested_items_to_be_public = false
     blob_properties = {
       versioning_enabled       = true
@@ -141,38 +91,13 @@ storage_accounts = {
     network = {
       default_action = "Deny"
       bypass         = ["Logging", "Metrics", "AzureServices"]
-      ip_rules       = ["{{ ignite.global.ip_whitelist | join('\",\"') }}"]
-      subnets = {
-        level2 = {
-          lz_key     = "launchpad"
-          vnet_key   = "vnet_region1"
-          subnet_key = "level2"
-        }
-      }
+      ip_rules       = ["{{ ignite.global.ip_whitelist }}"]      
     }
     containers = {
       tfstate = {
         name = "tfstate"
       }
-    }
-    private_endpoints = {
-      level2 = {
-        name               = "stg-level2"
-        resource_group_key = "level2"
-        vnet_key           = "vnet_region1"
-        subnet_key         = "level2"
-        private_service_connection = {
-          name                 = "stg-level2-link"
-          is_manual_connection = false
-          subresource_names    = ["blob"]
-        }
-        private_dns = {
-          zone_group_name = "gitops"
-          lz_key          = "launchpad"
-          keys            = ["privatelink.blob.core.windows.net"]
-        }
-      }
-    }
+    }    
     tags = {
       caf_environment = "{{ ignite.global.caf_environment }}"
       caf_launchpad   = "launchpad"
@@ -186,7 +111,7 @@ storage_accounts = {
     account_tier                    = "Standard"
     shared_access_key_enabled       = false
     account_replication_type        = "GRS"
-    public_network_access_enabled   = false
+    public_network_access_enabled   = true
     allow_nested_items_to_be_public = false
     blob_properties = {
       versioning_enabled       = true
@@ -201,38 +126,13 @@ storage_accounts = {
     network = {
       default_action = "Deny"
       bypass         = ["Logging", "Metrics", "AzureServices"]
-      ip_rules       = ["{{ ignite.global.ip_whitelist | join('\",\"') }}"]
-      subnets = {
-        level3 = {
-          lz_key     = "launchpad"
-          vnet_key   = "vnet_region1"
-          subnet_key = "level3"
-        }
-      }
+      ip_rules       = ["{{ ignite.global.ip_whitelist }}"]      
     }
     containers = {
       tfstate = {
         name = "tfstate"
       }
-    }
-    private_endpoints = {
-      level3 = {
-        name               = "stg-level3"
-        resource_group_key = "level3"
-        vnet_key           = "vnet_region1"
-        subnet_key         = "level3"
-        private_service_connection = {
-          name                 = "stg-level3-link"
-          is_manual_connection = false
-          subresource_names    = ["blob"]
-        }
-        private_dns = {
-          zone_group_name = "gitops"
-          lz_key          = "launchpad"
-          keys            = ["privatelink.blob.core.windows.net"]
-        }
-      }
-    }
+    }    
     tags = {
       caf_environment = "{{ ignite.global.caf_environment }}"
       caf_launchpad   = "launchpad"
@@ -246,7 +146,7 @@ storage_accounts = {
     account_tier                    = "Standard"
     shared_access_key_enabled       = false
     account_replication_type        = "GRS"
-    public_network_access_enabled   = false
+    public_network_access_enabled   = true
     allow_nested_items_to_be_public = false
     blob_properties = {
       versioning_enabled       = true
@@ -261,33 +161,8 @@ storage_accounts = {
     network = {
       default_action = "Deny"
       bypass         = ["Logging", "Metrics", "AzureServices"]
-      ip_rules       = ["{{ ignite.global.ip_whitelist | join('\",\"') }}"]
-      subnets = {
-        level4 = {
-          lz_key     = "launchpad"
-          vnet_key   = "vnet_region1"
-          subnet_key = "level4"
-        }
-      }
-    }
-    private_endpoints = {
-      level4 = {
-        name               = "stg-level4"
-        resource_group_key = "level4"
-        vnet_key           = "vnet_region1"
-        subnet_key         = "level4"
-        private_service_connection = {
-          name                 = "stg-level4-link"
-          is_manual_connection = false
-          subresource_names    = ["blob"]
-        }
-        private_dns = {
-          zone_group_name = "gitops"
-          lz_key          = "launchpad"
-          keys            = ["privatelink.blob.core.windows.net"]
-        }
-      }
-    }
+      ip_rules       = ["{{ ignite.global.ip_whitelist }}"]      
+    }    
     tags = {
       caf_environment = "{{ ignite.global.caf_environment }}"
       caf_launchpad   = "launchpad"

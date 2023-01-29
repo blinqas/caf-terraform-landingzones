@@ -135,7 +135,7 @@
       loop: "{{ jinja2_files.files }}"
 
     - find:
-        paths: "{{ base_folder }}/.github/workflows/"
+        paths: "{{ template_folder }}/.github/workflows/"
         recurse: yes
         patterns: ["*.j2"]
         file_type: file
@@ -143,8 +143,8 @@
 
     - name: Process GitHub actions workflows
       ansible.builtin.template:
-      src: "{{ item.path }}"
-      dest: "{{ item.path  | regex_replace('.j2$', '') }}"
+        src: "{{ item.path }}"
+        dest: "{{ base_folder }}/.github/workflows/{{ item.path | basename | regex_replace('.j2$', '') }}"
       loop: "{{ workflow_files.files }}"
 
       

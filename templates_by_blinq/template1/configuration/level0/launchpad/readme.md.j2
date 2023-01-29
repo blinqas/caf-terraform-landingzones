@@ -28,7 +28,7 @@ rover login -t {{ ignite.global.onmicrosoft_domain }} \ -s {{ ignite.global.subs
 
 cd /tf/caf
 git clone {{ ignite.global.lz_repo }} landingzones
-cd landingzones
+cd /tf/caf/landingzones
 git fetch origin
 git checkout {{ ignite.global.lz_ref }}
 git pull
@@ -104,8 +104,8 @@ Destroying the launchpad is a specific opertion that requires the tfstate to be 
 rover \
   -lz /tf/caf/landingzones/caf_launchpad \
   -var-folder {{ ignite.global.folders.configuration_folder }}/level0/launchpad \
-  -target_subscription {{ ignite.global.subscriptions.sub_management }} \
   -tfstate_subscription_id {{ ignite.global.subscriptions.sub_management }} \
+  -target_subscription {{ ignite.global.subscriptions.sub_management }} \
   -tfstate caf_launchpad.tfstate \
   -launchpad \
   -env {{ ignite.global.caf_environment }} \

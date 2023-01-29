@@ -18,11 +18,5 @@ azuread_roles = {
         "Groups Administrator"
       ]
     }
-    subscription_creation_landingzones = {
-      roles = [
-        "Application Administrator",
-        "Groups Administrator"
-      ]
-    }
   }
 }

@@ -1,8 +1,4 @@
 resource_groups = {
-  gitops = {
-    name   = "gitops"
-    region = "region1"
-  }
   level0 = {
     name   = "level0"
     region = "region1"
