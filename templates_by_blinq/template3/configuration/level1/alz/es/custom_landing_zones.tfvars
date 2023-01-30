@@ -36,9 +36,7 @@ custom_landing_zones = {
     }
     subscriptions = {}
 
-    subscription_ids = [
-      "2ddb4ed7-acfa-498c-8877-c0e48bdc2375"
-    ]
+    subscription_ids = []
   }
 
 }
