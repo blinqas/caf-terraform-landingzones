@@ -4,12 +4,12 @@ archetype_config_overrides = {
     parameters = {
       "Allowed-Locations" = {
         "listOfAllowedLocations" = {
-          value = {{ ignite.global.azure_regions_list }}
+          value = "{{ ignite.global.azure_regions_list }}"
         }        
       }
       "Deny-RSG-Locations" = {
         "listOfAllowedLocations" = {
-          value = {{ ignite.global.azure_regions_list }}
+          value = "{{ ignite.global.azure_regions_list }}"
         }  
       }
       "Deny-Subnet-Without-Nsg" = {
