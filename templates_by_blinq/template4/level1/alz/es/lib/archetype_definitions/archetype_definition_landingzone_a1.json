@@ -1,0 +1,19 @@
+{
+    "landingzone_a1": {
+        "policy_assignments": [
+            "Allowed-Locations"
+        ],
+        "policy_definitions": [
+        ],
+        "policy_set_definitions": [
+        ],
+        "role_definitions": [
+        ],
+        "archetype_config": {
+            "parameters": {
+            },
+            "access_control": {
+            }
+        }
+    }
+}

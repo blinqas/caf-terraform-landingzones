@@ -49,7 +49,7 @@ role_mapping = {
       "level1" = {
         "Reader" = {
           azuread_groups = {
-            keys = ["identity", "management", "connectivity","alz", "security", "subscription_creation_platform", "subscription_creation_landingzones", "caf_platform_contributors"]
+            keys = ["identity", "management", "alz", "security", "subscription_creation_platform", "subscription_creation_landingzones", "caf_platform_contributors"]
           }
         }
       }
@@ -91,7 +91,7 @@ role_mapping = {
       "level1" = {
         "Storage Blob Data Contributor" = {
           azuread_groups = {
-            keys = ["identity", "management", "connectivity", "alz", "security", "caf_platform_maintainers", "subscription_creation_platform"]
+            keys = ["identity", "management", "alz", "security", "caf_platform_maintainers", "subscription_creation_platform"]
           }
         }
         "Storage Blob Data Reader" = {
@@ -104,13 +104,13 @@ role_mapping = {
       "level2" = {
         "Storage Blob Data Contributor" = {
           azuread_groups = {
-            keys = ["identity", "connectivity", "management", "security", "caf_platform_maintainers", "subscription_creation_platform", "subscription_creation_landingzones"]
+            keys = ["identity", "connectivity", "management", "security", "landingzones", "caf_platform_maintainers", "subscription_creation_platform", "subscription_creation_landingzones"]
             # keys = ["level0", "identity", "connectivity", "management", "security", "caf_platform_maintainers"] Hein Tonny: Try to remove level0, should not require read access two levels up.
           }
         }
         "Storage Blob Data Reader" = {
           azuread_groups = {
-            keys = ["caf_platform_contributors", "landingzones", "caf_landingzones_maintainers", "caf_landingzones_contributors"]
+            keys = ["caf_platform_contributors", "caf_landingzones_maintainers", "caf_landingzones_contributors"]
           }
         }
       }

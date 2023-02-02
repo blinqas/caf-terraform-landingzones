@@ -1,0 +1,69 @@
+global:
+  caf_environment: alz
+  prefix: alz
+  azure_regions: {'region1': 'westeurope', 'region2': 'norwayeast', 'region3': 'uksouth', 'region4': 'eastus', 'region5': 'southeastasia'}
+  azure_regions_list: ['westeurope', 'norwayeast', 'uksouth', 'eastus', 'southeastasia']  
+  lz_repo: https://github.com/blinqas/caf-terraform-landingzones
+  lz_ref: blinq-5.6.4
+  caf_repo: https://github.com/blinqas/terraform-azurerm-caf
+  caf_ref: blinq-5.6.4
+  security_email_address: support@blinq.no
+  noc_email_address: support@blinq.no
+  onmicrosoft_domain: blinqservices.onmicrosoft.com
+  caf_group_owner: caf-group-owner@blinqservices.onmicrosoft.com
+  
+  subscriptions:
+    sub_management: "21a5bbce-56bb-48b5-bf13-b063e77045bb"
+    sub_connectivity: "c6f3347e-7428-42c1-bccc-6950e66a5e8b"
+    sub_identity: "2ec7c658-b4ec-430b-9830-3fac495939e7"
+    sub_security: "ae93f1aa-35bb-44d4-bb7a-9fe7406743b3"
+    sub_sandbox: "aa0afad8-420e-4d68-ac10-f03ddaca6b39"
+  
+  cred_keyvaults:
+    cred_level0: alz-kv-idl0-pfc
+    cred_management: alz-kv-mg-psq
+    cred_identity: alz-kv-id-lpc
+    cred_security: alz-kv-sec-jid
+    cred_connectivity: alz-kv-co-ydm    
+    cred_alz: alz-kv-es-nxb
+    cred_ea_account_owner: 
+    cred_subscription_creation_platform: alz-kv-scp-xxx
+    cred_subscription_creation_landingzones: alz-kv-scl-hnp
+
+  folders:
+    destination_folder: configuration
+    base_folder: /tf/caf
+    template_base_folder: /tf/caf/landingzones/templates_by_blinq
+    template_folder: /tf/caf/landingzones/templates_by_blinq/template3/
+    configuration_folder: /tf/caf/configuration
+    backup_folder: /tf/caf/configuration_backup_2023-01-30_05-55-35
+
+  ip_whitelist:
+    - "20.0.177.210"
+  ip_whitelist_with_mask_32:
+    - "20.0.177.210/32"
+  logged_in_sp_object_id: "f9f5715b-c8e3-44e6-bb3e-fba3f54a176d"
+  azuread_groups:
+    owners:
+      - "53fa4078-128a-4495-b77a-00730629f862"
+      - "f9f5715b-c8e3-44e6-bb3e-fba3f54a176d"
+
+
+level0:
+  launchpad:
+    azuread_groups:
+      members:
+        - "53fa4078-128a-4495-b77a-00730629f862"
+        - "f9f5715b-c8e3-44e6-bb3e-fba3f54a176d"
+      owners:
+        - "53fa4078-128a-4495-b77a-00730629f862"
+        - "f9f5715b-c8e3-44e6-bb3e-fba3f54a176d"
+
+level1:
+  alz:
+    customer_name: blinQ
+    caf_environment: alz
+    default_email_address: support@blinq.no
+    minimalSeverity: Low
+    alz_mg_prefix: es
+    alz_mg_name: ALZ

@@ -1,0 +1,14 @@
+public_ip_addresses = {
+  fw_pip1_norwayeast = {
+    name = "pip-fw-01-norwayeast"
+    resource_group = {
+      lz_key = "connectivity_virtual_wans"
+      key    = "global_wan"
+    }
+    sku                     = "Standard"
+    allocation_method       = "Static"
+    ip_version              = "IPv4"
+    idle_timeout_in_minutes = "4"
+    zones                   = [1, 2, 3]
+  }
+}

@@ -11,9 +11,9 @@ rover \
   --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_identity }}.vault.azure.net \
 {% endif %}
   -lz /tf/caf/landingzones/caf_solution \
-  -var-folder {{ ignite.global.folders.configuration_folder }}/level0/credentials \
+  -var-folder {{ ignite.global.folders.configuration_folder }}/level0/credentials_public \
   -tfstate_subscription_id {{ ignite.global.subscriptions.sub_management }} \
-  -target_subscription {{ ignite.global.subscriptions.sub_security }} \
+  -target_subscription {{ ignite.global.subscriptions.sub_management }} \
   -tfstate launchpad_credentials.tfstate \
   -launchpad \
   -env {{ ignite.global.caf_environment }} \
@@ -34,7 +34,7 @@ rover \
   --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_identity }}.vault.azure.net \
 {% endif %}
   -lz /tf/caf/landingzones/caf_solution \
-  -var-folder {{ ignite.global.folders.configuration_folder }}/level0/credentials \
+  -var-folder {{ ignite.global.folders.configuration_folder }}/level0/credentials_public \
   -tfstate_subscription_id {{ ignite.global.subscriptions.sub_management }} \
   -target_subscription {{ ignite.global.subscriptions.sub_management }} \
   -tfstate launchpad_credentials.tfstate \

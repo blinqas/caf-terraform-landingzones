@@ -91,12 +91,12 @@ role_mapping = {
       "level1" = {
         "Storage Blob Data Contributor" = {
           azuread_groups = {
-            keys = ["identity", "management", "connectivity", "alz", "security", "caf_platform_maintainers", "subscription_creation_platform"]
+            keys = ["identity", "management", "alz", "security", "caf_platform_maintainers", "subscription_creation_platform"]
           }
         }
         "Storage Blob Data Reader" = {
           azuread_groups = {
-            keys = ["caf_platform_contributors", "subscription_creation_landingzones"]
+            keys = ["connectivity", "caf_platform_contributors", "subscription_creation_landingzones"]
             # keys = ["caf_platform_contributors", "level0"] Hein Tonny: Try to remove level0, should not require read access one level up.
           }
         }

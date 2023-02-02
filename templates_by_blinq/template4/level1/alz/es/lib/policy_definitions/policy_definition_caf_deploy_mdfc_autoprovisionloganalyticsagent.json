@@ -1,0 +1,102 @@
+{
+  "name": "Deploy-MDFC-AutoProvisonLogAnalyticsAgent-CAF",
+  "type": "Microsoft.Authorization/policyDefinitions",
+  "apiVersion": "2021-06-01",
+  "scope": null,
+  "properties": {
+    "displayName": "Configure auto provisioning of the Log Analytics agent on subscriptions",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "This policy ensures that the Log Analytics agent is automatically deployed to all supported Azure VMs and any new ones that are created in all subscriptions. This helps to monitor for security vulnerabilities and threats by collecting data from Azure virtual machines and sending it to a Log Analytics workspace for analysis.",
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Security Center"
+    },
+    "parameters": {
+      "effect": {
+        "type": "string",
+        "defaultValue": "DeployIfNotExists",
+        "allowedValues": [
+          "DeployIfNotExists",
+          "Disabled"
+        ],
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Enable or disable the execution of the policy"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Resources/subscriptions"
+          },
+          {
+              "field": "Microsoft.Security/autoProvisioningSettings/autoProvision",
+              "equals": "On"
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]",
+        "details": {
+          "type": "Microsoft.Security/autoProvisioningSettings",
+          "deploymentScope": "subscription",
+          "existenceScope": "subscription",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/fb1c8493-542b-48eb-b624-b4c8fea62acd"
+          ],
+          "existenceCondition": {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Security/autoProvisioningSettings"
+              },
+              {
+                "not": {
+                  "field": "Microsoft.Security/autoProvisioningSettings/autoProvision",
+                  "equals": "On"
+                }
+              }
+            ]
+          },
+          "deployment": {
+            "location": "northeurope",
+            "properties": {
+              "mode": "incremental",
+              "parameters": {
+                "autoProvision": {
+                  "value": "On"
+                }
+              },
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "variables": {},
+                "resources": [
+                  {
+                    "type": "Microsoft.Security/autoProvisioningSettings",
+                    "name": "default",
+                    "apiVersion": "2020-01-01-preview",
+                    "properties": {
+                      "autoProvision": "On",
+                      "notificationsByRole": {
+                        "state": "On",
+                        "roles": [
+                          "Owner"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "outputs": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

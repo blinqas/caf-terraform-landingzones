@@ -1,24 +1,22 @@
 
-### Generate launchpad credentials
+### Deploy GitOps Agents
 
 ```bash
 # For manual bootstrap:
-# Login to the subscription AzLz_Management with the user ext-heintk@{{ ignite.global.onmicrosoft_domain }} \
-rover login -t {{ ignite.global.onmicrosoft_domain }} \
+# Login to the subscription AzLz_Management with the user ext-heintk@blinqservices.onmicrosoft.com \
+rover login -t blinqservices.onmicrosoft.com \
 
 rover \
-{% if "not deployed" not in ignite.global.cred_keyvaults.cred_identity %}
-  --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_identity }}.vault.azure.net \
-{% endif %}
+  --impersonate-sp-from-keyvault-url https://alz-kv-idl0-pfc.vault.azure.net \
   -lz /tf/caf/landingzones/caf_solution \
-  -var-folder {{ ignite.global.folders.configuration_folder }}/level0/credentials \
-  -tfstate_subscription_id {{ ignite.global.subscriptions.sub_management }} \
-  -target_subscription {{ ignite.global.subscriptions.sub_security }} \
-  -tfstate launchpad_credentials.tfstate \
+  -var-folder /tf/caf/configuration/level0/gitops_agents \
+  -tfstate_subscription_id 21a5bbce-56bb-48b5-bf13-b063e77045bb \
+  -target_subscription 21a5bbce-56bb-48b5-bf13-b063e77045bb \
+  -tfstate gitops_agents.tfstate \
   -launchpad \
-  -env {{ ignite.global.caf_environment }} \
+  -env alz \
   -level level0 \
-  -p ${TF_DATA_DIR}/launchpad_credentials.tfstate.tfplan \
+  -p ${TF_DATA_DIR}/gitops_agents.tfstate.tfplan \
   -a plan
 
 ```
@@ -30,18 +28,16 @@ If the plan is not successfull you need to come back to the yaml ignite.yaml, fi
 # On success plan, execute
 
 rover \
-{% if "not deployed" not in ignite.global.cred_keyvaults.cred_identity %}
-  --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_identity }}.vault.azure.net \
-{% endif %}
+  --impersonate-sp-from-keyvault-url https://alz-kv-idl0-pfc.vault.azure.net \
   -lz /tf/caf/landingzones/caf_solution \
-  -var-folder {{ ignite.global.folders.configuration_folder }}/level0/credentials \
-  -tfstate_subscription_id {{ ignite.global.subscriptions.sub_management }} \
-  -target_subscription {{ ignite.global.subscriptions.sub_management }} \
-  -tfstate launchpad_credentials.tfstate \
+  -var-folder /tf/caf/configuration/level0/gitops_agents \
+  -tfstate_subscription_id 21a5bbce-56bb-48b5-bf13-b063e77045bb \
+  -target_subscription 21a5bbce-56bb-48b5-bf13-b063e77045bb \
+  -tfstate gitops_agents.tfstate \
   -launchpad \
-  -env {{ ignite.global.caf_environment }} \
+  -env alz \
   -level level0 \
-  -p ${TF_DATA_DIR}/launchpad_credentials.tfstate.tfplan \
+  -p ${TF_DATA_DIR}/gitops_agents.tfstate.tfplan \
   -a apply
 
 ```
