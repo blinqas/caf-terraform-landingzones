@@ -14,7 +14,7 @@ git fetch origin
 git checkout blinq-5.6.4
 
 rover \
-{% if "not deployed" not in ignite.global.cred_keyvaults.cred_alz %}
+{% if ignite.global.cred_keyvaults.cred_alz is defined and ignite.global.cred_keyvaults.cred_alz not like ignite.global.null %}
   --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_alz }}.vault.azure.net \
 {% endif %}
   -lz /tf/caf/landingzones/caf_solution/add-ons/caf_eslz \

@@ -7,7 +7,7 @@ rover logout
 rover login -t {{ ignite.global.onmicrosoft_domain }} \
 
 rover \
-{% if "not deployed" not in ignite.global.cred_keyvaults.cred_subscription_creation_platform %}
+{% if ignite.global.cred_keyvaults.cred_subscription_creation_platform is defined and ignite.global.cred_keyvaults not like ignite.global.null %}
   --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_subscription_creation_platform }}.vault.azure.net \
 {% endif %}
   -lz /tf/caf/landingzones/caf_solution \

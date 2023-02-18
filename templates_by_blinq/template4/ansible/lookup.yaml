@@ -1,0 +1,126 @@
+- name: Get access token
+  shell: echo $(az account get-access-token --query accessToken -o tsv)
+  register: token
+
+- name: Retrieve tenant ID
+  shell: echo $(az account show --query tenantId -o tsv)
+  register: tenant_id
+
+- name: Print tenant_id
+  debug:
+    msg: "Tenant id: {{tenant_id.stdout}}"
+
+- name: Retrieve onmicrosoft.com domain
+  shell: az rest --method GET --uri "https://graph.microsoft.com/v1.0/organization/{{ tenant_id.stdout }}" -o json | jq -r '.verifiedDomains[0].name'
+  register: onmicrosoft_domain
+
+- name: CAF Group Owner
+  set_fact:
+    caf_group_owner: "caf-group-owner@{{ onmicrosoft_domain.stdout }}"
+
+- name: Retrieve object ID of user principal caf-group-owner@onmicrosoft_domain
+  shell: az ad user show --id {{ caf_group_owner }} | jq '.id'
+  register: caf_group_owner_object_id
+
+- name: Retrieve object ID of logged in service principal
+  shell: az ad sp show --id $(az account show --query user.name -o tsv) | jq '.id'
+  register: logged_in_sp_object_id
+
+- name: Get public ip address for bootstrap whitelisting
+  shell: dig @resolver1.opendns.com A myip.opendns.com +short -4
+  register: public_ip
+
+# Get Azure Subscription id's
+- name: Get Azure Subscription id for azlz_management
+  shell: echo $(az account list | jq -r '.[] | select(.name | test("^azlz_management$"; "i")) | .id')
+  register: azlz_management
+
+- name: Get Azure Subscription id for azlz_connectivity
+  shell: echo $(az account list | jq -r '.[] | select(.name | test("^azlz_connectivity$"; "i")) | .id')
+  register: azlz_connectivity
+
+- name: Get Azure Subscription id for azlz_identity
+  shell: echo $(az account list | jq -r '.[] | select(.name | test("^azlz_identity$"; "i")) | .id')
+  register: azlz_identity
+
+- name: Get Azure Subscription id for azlz_security
+  shell: echo $(az account list | jq -r '.[] | select(.name | test("^azlz_security$"; "i")) | .id')
+  register: azlz_security
+
+- name: Get Azure Subscription id for azlz_sandbox
+  shell: echo $(az account list | jq -r '.[] | select(.name | test("^azlz_sandbox$"; "i")) | .id')
+  register: azlz_sandbox
+
+# Get Rover keyvaults with credentials
+
+- name: Get Rover Keyvaults for cred_level0
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_level0' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_level0
+
+- name: Get Rover Keyvaults for cred_management
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_management' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_management
+
+- name: Get Rover Keyvaults for cred_identity
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_identity' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_identity
+
+- name: Get Rover Keyvaults for cred_security
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_security' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_security
+
+- name: Get Rover Keyvaults for cred_connectivity
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_connectivity' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_connectivity
+
+- name: Get Rover Keyvaults for cred_alz
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_alz' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_alz
+
+- name: Get Rover Keyvaults for cred_ea_account_owner
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_ea_account_owner' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_ea_account_owner
+
+- name: Get Rover Keyvaults for cred_subscription_creation_platform
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_subscription_creation_platform' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_subscription_creation_platform
+
+- name: Get Rover Keyvaults for cred_subscription_creation_landingzones
+  shell: echo $(az keyvault list \
+      --subscription {{ azlz_management.stdout }} \
+      --query "[?tags.caf_identity_aad_key=='cred_subscription_creation_landingzones' && tags.caf_environment=='{{ caf_environment }}']" -o json | jq -r '.[].name')
+  register: cred_subscription_creation_landingzones
+
+- name: Output keyvault names
+  debug:
+    msg: |
+      "Rover keyvault for cred_level0: {{cred_level0.stdout}}"
+      "Rover keyvault for cred_management: {{cred_management.stdout}}"
+      "Rover keyvault for cred_identity: {{cred_identity.stdout}}"
+      "Rover keyvault for cred_security: {{cred_security.stdout}}"
+      "Rover keyvault for cred_connectivity: {{cred_connectivity.stdout}}"
+      "Rover keyvault for cred_alz: {{cred_alz.stdout}}"
+      "Rover keyvault for cred_ea_account_owner: {{cred_ea_account_owner.stdout}}"
+      "Rover keyvault for cred_subscription_creation_platform: {{cred_subscription_creation_platform.stdout}}"
+      "Rover keyvault for cred_subscription_creation_landingzones: {{cred_subscription_creation_landingzones.stdout}}"
+
+  
+  
+
+

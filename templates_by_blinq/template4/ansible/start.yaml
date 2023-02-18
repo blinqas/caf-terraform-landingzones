@@ -1,0 +1,153 @@
+- name: Copy template files and replace variables
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  
+    - name: Install rsync
+      ansible.builtin.apt:
+        name: rsync
+        state: present
+
+    - name: Get current date and time
+      command: date +"%Y-%m-%d_%H-%M-%S"
+      register: current_datetime
+
+    - name: Current date and time is
+      debug:
+        msg: "Current date and time is: {{ current_datetime.stdout }}"
+
+    - set_fact:
+        base_folder: "{{ base_folder | default('/tf/caf') }}"
+
+    - set_fact:
+        template_base_folder: "{{ base_folder }}/landingzones/templates_by_blinq"
+        template_folder: "{{ base_folder }}/landingzones/templates_by_blinq/{{ template | default('template1') }}/"
+        configuration_folder: "{{ base_folder }}/{{ destination_folder | default('configuration_new') }}"
+    
+    - set_fact:
+        backup_folder: "{{ configuration_folder }}_backup_{{ current_datetime.stdout }}"
+
+    - name: Folders that will be used
+      debug:
+        msg:
+          - "Destination folder is: {{ destination_folder }}"
+          - "Base folder: {{ base_folder | default('/tf/caf')}}"
+          - "Template base folder is: {{ template_base_folder }}"
+          - "Template folder is: {{ template_folder }}"          
+          - "Configuration folder is: {{ configuration_folder }}"
+          - "Backup folder is: {{ backup_folder }}"
+  
+    - name: Check if configuration folder exists
+      stat:
+        path: "{{ configuration_folder }}"
+      register: folder_stat
+
+    - name: Move existing configuration folder to backup folder
+      shell: mv {{ configuration_folder }} {{ backup_folder }}
+      register: move_result
+      when: folder_stat.stat.exists
+
+    - name: Move result
+      debug:
+        msg: "{{ move_result }}"
+
+    - name: Copy configuration files from landing zone folder to local folder
+      synchronize:
+        src: "{{ template_folder }}/"
+        dest: "{{ configuration_folder }}"
+        delete: yes
+        recursive: yes
+      when: move_result.changed == false or move_result.rc == 0
+      register: copy_config_result
+
+    - name: Copy config result
+      debug:
+        msg: "{{ copy_config_result }}"
+
+    - name: Include tasks in lookup.yaml to generate all lookup variables
+      include_tasks: "{{ template_folder }}/ansible/lookup.yaml"
+      when: copy_config_result.failed == false
+      register: lookup_result
+
+    - name: Lookup result
+      debug:
+        msg: "{{ lookup_result }}"
+
+    - name: Copy GitHub actions workflow files from landing zone folder to local folder
+      synchronize:
+        src: "{{ template_folder }}/.github/workflows/"
+        dest: "{{ base_folder }}/.github/workflows/"
+        delete: no
+        recursive: no
+      register: copy_workflows_result
+
+    - name: Copy workflows result
+      debug:
+        msg: "{{ copy_workflows_result }}"
+
+    - name: Include tasks in inputs.yaml
+      include_tasks: "{{ template_folder }}/ansible/inputs.yaml"
+      when: copy_config_result.failed == false
+      register: inputs_result
+
+    - name: Input result
+      debug:
+        msg: "{{ inputs_result }}"
+
+    - name: Process local ignite.yaml jinja2 file and update with variables
+      ansible.builtin.template:
+        src: "{{ template_folder }}/ansible/ignite.yaml"
+        dest: "{{ configuration_folder }}/ignite.yaml"
+      when: lookup_result.changed == false
+      register: ignite_update_result
+
+    - name: Ignite update result
+      debug:
+        msg: "{{ ignite_update_result }}"
+
+    - name: Include variables from local ignite.yaml
+      include_vars:
+        name: ignite
+        file: "{{ configuration_folder }}/ignite.yaml"
+      when: ignite_update_result.failed == false
+      register: ignite_include
+
+    - name: Ignite include result
+      debug:
+        msg: "{{ ignite_include }}"
+
+    - find:
+        paths: "{{ configuration_folder }}"
+        recurse: yes
+        patterns: ["*.j2"]
+        file_type: file
+      register: jinja2_files
+
+    - name: Process configuration jinja2 files
+      ansible.builtin.template:
+        src: "{{ item.path }}"
+        dest: "{{ item.path  | regex_replace('.j2$', '') }}"
+      loop: "{{ jinja2_files.files }}"
+
+    - find:
+        paths: "{{ template_folder }}/.github/workflows/"
+        recurse: yes
+        patterns: ["*.j2"]
+        file_type: file
+      register: workflow_files
+
+    - name: Process GitHub actions workflows jinja2 files
+      ansible.builtin.template:
+        src: "{{ item.path }}"
+        dest: "{{ base_folder }}/.github/workflows/{{ item.path | basename | regex_replace('.j2$', '') }}"
+      loop: "{{ workflow_files.files }}"
+
+      
+
+
+
+
+
+
+
+      

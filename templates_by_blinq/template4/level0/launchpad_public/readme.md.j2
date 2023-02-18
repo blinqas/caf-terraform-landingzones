@@ -34,7 +34,7 @@ git checkout {{ ignite.global.lz_ref }}
 git pull
 
 rover \
-{% if "not deployed" not in ignite.global.cred_keyvaults.cred_level0 %}
+{% if ignite.global.cred_keyvaults.cred_level0 is defined and ignite.global.cred_keyvaults not like ignite.global.null %}
   --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_level0 }}.vault.azure.net \
 {% endif %}
   -lz /tf/caf/landingzones/caf_launchpad \
@@ -57,7 +57,7 @@ If the plan is not successfull you need to come back to the yaml ignite.yaml, fi
 # On success plan, execute
 
 rover \
-{% if "not deployed" not in ignite.global.cred_keyvaults.cred_level0 %}
+{% if ignite.global.cred_keyvaults.cred_level0 is defined and ignite.global.cred_keyvaults not like ignite.global.null %}
   --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_level0 }}.vault.azure.net \
 {% endif %}
   -lz /tf/caf/landingzones/caf_launchpad \

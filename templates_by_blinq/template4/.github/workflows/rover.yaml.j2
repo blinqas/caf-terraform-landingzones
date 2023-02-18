@@ -1,0 +1,342 @@
+#
+# Copyright (c) Microsoft Corporation
+# Licensed under the MIT License.
+#
+
+name: "Rover for {{ ignite.global.caf_environment }}"
+{% raw %}
+on:
+  workflow_call:
+    inputs:
+      jobs:
+        default: login, checkout, plan, approval, apply, cleanup
+        type: string
+        required: false
+      bootstrap:
+        default: false
+        type: boolean
+      lz_repo:
+        description: "Git repository of the the terraform azure caf landing zone code."
+        required: false
+        type: string
+      lz_ref:
+        description: "Tag or branch name."
+        required: false
+        type: string
+      caf_repo:
+        description: "Git repository of the the terraform azure caf module."
+        required: false
+        type: string
+      caf_ref:
+        description: "Tag or branch name."
+        required: false
+        type: string
+      terraform_action:
+        description: "Terraform action one of (plan_apply, apply)"
+        type: string
+        default: plan
+      terraform_action_plan:
+        description: "Terraform action plan and additional parameters"
+        type: string
+        required: false
+      terraform_action_apply:
+        description: "Terraform action apply and additional parameters"
+        type: string
+        required: false
+      tenant:
+        description: "Azure Active Directory tenant domain name (e.g: mytenant.onmicrosoft.com or the default custom domain) or the GUID."
+        required: false
+        type: string
+      client_id:
+        description: Client Id to login Azure profile with OIDC
+        required: false
+        type: string
+      tenant_id:
+        description: Tenant Id to login Azure profile with OIDC
+        required: false
+        type: string
+      landingzone_code_path:
+        description: Path of the terraform code
+        required: false
+        type: string
+      landingzone_configuration_path:
+        description: Path of the configuration files
+        required: false
+        type: string
+      tfstate:
+        description: name of the tfstate
+        required: false
+        type: string
+      launchpad:
+        description: Boolean value to specify if the deployment is the launchpad or not
+        default: false
+        type: string
+      environment:
+        description: Name of the CAF environment
+        required: false
+        type: string
+      level:
+        description: CAF terraform level of the deployment
+        required: false
+        default: level0
+        type: string
+      caf_identity_aad_key:
+        description: Tag's name of the Keyvault wit the credential to use.
+        required: false
+        type: string
+      plan_path:
+        description: Full path of the of terraform plan
+        required: false
+        type: string
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_LAUNCHPAD_SUBSCRIPTION_ID:
+        required: true
+      AZURE_TARGET_SUBSCRIPTION_ID:
+        required: true
+env:
+  TF_CLI_ARGS: '-no-color'
+  TF_REGISTRY_DISCOVERY_RETRY: 5
+  TF_REGISTRY_CLIENT_TIMEOUT: 15
+  ROVER_RUNNER: true
+  GIT_USER_EMAIL: "github-actions@github.com"
+  GIT_USER_NAME: "GitHub Actions Bot"
+jobs:
+  login:
+    name: Azure Login
+    if: contains(inputs.jobs, 'login')
+{% endraw %}
+    runs-on: [self-hosted, rover-{{ ignite.global.caf_environment }}]
+{% raw %}    
+    steps:
+      - name: 'Azure Login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_LAUNCHPAD_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+  checkout:
+    name: Checkout Repositories
+    needs: [login]
+    if: contains(inputs.jobs, 'checkout')
+{% endraw %}
+    runs-on: [self-hosted, rover-{{ ignite.global.caf_environment }}]
+{% raw %}    
+    steps:
+      - name: Cleanup working directory before checkout
+        shell: bash
+        run: |
+          echo "Before cleanup"
+          ls -lsa
+          rm -rf *
+          echo "After cleanup"
+          ls -lsa
+      - name: Checkout Configuration
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Checkout Terraform Azure CAF Landing Zone
+        shell: bash
+        run: |
+          rm -rf ./landingzones
+          git clone --branch ${{ inputs.lz_ref }} --single-branch ${{ inputs.lz_repo }} ./landingzones
+      - name: Checkout Terraform Azure CAF Modules
+        shell: bash
+        run: |
+          git clone --branch ${{ inputs.caf_ref }} --single-branch ${{ inputs.caf_repo }} ./landingzones/azure-caf-modules
+      - uses: actions/cache@v3
+        with:
+          path: .
+          key: cache-${{ github.run_id }}-${{ github.run_attempt }}
+  plan:
+    name: Rover Plan ${{ inputs.tfstate }}
+    needs: [login, checkout]
+    if: contains(inputs.jobs, 'plan')
+{% endraw %}
+    runs-on: [self-hosted, rover-{{ ignite.global.caf_environment }}]
+{% raw %}    
+    outputs:
+      apply: ${{ steps.status.outputs.apply }}
+      verify: ${{ steps.status.outputs.verify }}
+    steps:
+      - name: Checkout Configuration
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/cache/restore@v3
+        id: cache
+        with:
+          path: .
+          key: cache-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Generate Rover commands
+        id: generate-rover-command
+        if: inputs.terraform_action == 'plan_apply' || inputs.terraform_action == 'apply' || inputs.terraform_action == 'plan'
+        shell: bash
+        run: |
+          echo "Retreiving keyvault for credentials"
+          # Get the keyvault with the credentials
+          cred_vault_name=$(az keyvault list --query "[?(tags.caf_identity_aad_key=='${{inputs.caf_identity_aad_key}}' && tags.caf_environment=='${{inputs.environment}}')].{name:name}[0]" -o tsv)
+          if [ -z "${cred_vault_name}" ]; then
+            echo "Cannot retreive the credentials. Make sure the RBAC are set properly."
+            echo "Bootstraping the environment."
+          else
+            impresonate=("--impersonate-sp-from-keyvault-url https://${cred_vault_name}.vault.azure.net/ ")
+          fi
+          set +e
+          rover=("/tf/rover/rover.sh ")
+          action_plan=("-a plan ${{ inputs.terraform_action_plan }} ")
+          action_apply=("-a apply ${{ inputs.terraform_action_apply }} ")
+          landingzone_code_path=("-lz $(readlink -f ${{inputs.landingzone_code_path}}) ")
+          landingzone_configuration_path=("-var-folder $(readlink -f ${{inputs.landingzone_configuration_path}}) ")
+          tfstate_subscription_id=("-tfstate_subscription_id ${{secrets.AZURE_LAUNCHPAD_SUBSCRIPTION_ID}} ")
+          target_subscription=("-target_subscription ${{secrets.AZURE_TARGET_SUBSCRIPTION_ID}} ")
+          tfstate=("-tfstate ${{inputs.tfstate}} ")
+          environment=("-env ${{inputs.environment}} ")
+          level=("-level ${{inputs.level}} ")
+          output_file=$(readlink -f ./${{inputs.tfstate}}.output)
+          output=("--output ${output_file} ")
+          if [ "${{inputs.launchpad}}" = "true" ]; then
+            launchpad=("-launchpad ")
+          fi
+          if [ ! -z "${{inputs.plan_path}}" ]; then
+            plan_path=("-p ${{inputs.plan_path}} ")
+          fi
+          command_plan="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}${plan_path[@]}${output[@]}${action_plan[@]}${{inputs.terraform_action_plan}}"
+          command_apply="${rover[@]}${impresonate[@]}${landingzone_code_path[@]}${landingzone_configuration_path[@]}${tfstate_subscription_id[@]}${target_subscription[@]}${tfstate[@]}${environment[@]}${level[@]}${launchpad[@]}"
+          echo "This is the Rover Plan command:"
+          echo "$command_plan" | tee ${{ inputs.tfstate }}.rover-command-plan
+          echo "This is the Rover Apply command:"
+          echo "$command_apply" | tee ${{ inputs.tfstate }}.rover-command-apply
+          echo "rover-command-plan=$(echo ${command_plan})" >> $GITHUB_OUTPUT
+          echo "rover-command-apply=$(echo ${command_apply})" >> $GITHUB_OUTPUT
+          echo "output_file=$(echo ${output_file})" >> $GITHUB_OUTPUT
+      - id: status
+        if: (contains(inputs.terraform_action, 'plan'))
+        name: Execute terraform plan
+        shell: bash
+        run: |
+          set +e
+          echo "${{ steps.generate-rover-command.outputs.rover-command-plan }}"
+          eval ${{ steps.generate-rover-command.outputs.rover-command-plan }} 2>&1 | tee outputfile
+          plan=$(cat outputfile | grep ' -plan:  ')
+          plan_file=${plan//' -plan:  '/}
+          echo "plan file: '${plan_file}'"
+          apply=false
+          if [ "${{ inputs.terraform_action }}" = 'plan_apply' ]; then
+            echo "condition 0f"
+            verify=false
+          else
+            echo "condition 0t"
+            verify=true
+          fi
+          if [ "$(cat outputfile | grep -o 'No changes')" != 'No changes' ]; then
+            if [ "$(cat outputfile | grep -o '0 to destroy')" != '0 to destroy' ]; then
+              echo "condition 1"
+              apply=true
+              verify=true
+            fi
+            if [ "$(cat outputfile | grep -o '0 to change')" != '0 to change' ]; then
+              echo "condition 2"
+              apply=true
+            fi
+            if [ "$(cat outputfile | grep -o '0 to add')" != '0 to add' ]; then
+              echo "condition 3"
+              apply=true
+            fi
+            if [ "$(cat outputfile | grep -o 'so no changes are needed')" = 'so no changes are needed' ]; then
+              echo "condition 4"
+              apply=false
+              verify=false
+            fi
+            if [ "$(cat outputfile | grep -o 'Error on or near line')" = 'Error on or near line' ]; then
+              echo "condition 5"
+              apply=false
+              verify=false
+              set -e
+              exit 1
+            fi
+          fi
+          echo "apply: ${apply}"
+          echo "verify: ${verify}"
+          echo "apply=$(echo ${apply})" >> $GITHUB_OUTPUT
+          echo "verify=$(echo ${verify})" >> $GITHUB_OUTPUT
+          echo "plan_file=$(echo ${plan_file})" >> $GITHUB_OUTPUT
+      - name: Az Account Clear
+        if: always()
+        run: |
+          az account clear
+          echo "Azure session closed."
+      - uses: actions/cache/save@v3
+        with:
+          path: .
+          key: cache-${{ github.run_id }}-${{ github.run_attempt }}
+  approval:
+    if: ${{ contains(inputs.jobs, 'approval') || ( github.event_name == 'pull_request' && inputs.tfstate == 'alz.tfstate' ) }} # We only run approval job when this is a pull_request and when all plans are finnished (alz.tfsate is the last plan in platform)
+    name: Customer Merge Approval
+    needs: [plan]
+{% endraw %}
+    runs-on: [self-hosted, rover-{{ ignite.global.caf_environment }}]
+{% raw %}    
+    environment: prod-merge
+    steps:
+      - name: Wait for merge approval by customer
+        shell: bash
+        run: |
+          echo "Review event is: " ${{ github.event.review }}
+  apply:
+    if: needs.plan.outputs.apply == 'true'
+    name: Rover Apply ${{ inputs.tfstate }}
+    needs: [login, checkout, plan]
+    environment: prod-apply
+{% endraw %}
+    runs-on: [self-hosted, rover-{{ ignite.global.caf_environment }}]
+{% raw %}    
+    steps:
+      - name: 'Azure Login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_LAUNCHPAD_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+      - uses: actions/cache/restore@v3
+        id: cache
+        with:
+          path: .
+          key: cache-${{ github.run_id }}-${{ github.run_attempt }}
+      - id: apply
+        if: ( inputs.terraform_action == 'apply' || ( inputs.terraform_action == 'plan_apply' && needs.plan.outputs.apply == 'true') )
+        name: Execute terraform apply
+        shell: bash
+        run: |
+          plan_path=("-p $GITHUB_WORKSPACE/${{ inputs.tfstate }}.tfplan ")
+          action=("-a apply ")
+          command_apply_file="${{ inputs.tfstate }}.rover-command-apply"
+          command_apply="$(cat $command_apply_file) ${plan_path[@]}${action[@]}${{ inputs.terraform_action_apply }}"
+          echo ${command_apply}
+          eval ${command_apply}
+  cleanup:
+    if: always()
+    name: Cleanup Artifacts and Files
+    needs: [login, checkout, plan, approval, apply]
+{% endraw %}
+    runs-on: [self-hosted, rover-{{ ignite.global.caf_environment }}]
+{% raw %}    
+    steps:
+      - name: Cleanup
+        if: always()
+        run: |
+          az account clear
+          echo "Azure session closed."
+          rm -rf outputfile
+          rm -rf "$(readlink -f ${{inputs.tfstate}}.output)"
+          rm -rf ${{inputs.tfstate}}
+          rm -rf ${{inputs.plan_path}}
+          rm -rf ansible-cmd.txt
+{% endraw %}

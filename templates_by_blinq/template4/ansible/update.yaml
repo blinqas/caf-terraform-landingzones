@@ -1,0 +1,80 @@
+- name: Update local configuratin based on local ignite.yaml file
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  
+    - name: Get current date and time
+      command: date +"%Y-%m-%d_%H-%M-%S"
+      register: current_datetime
+
+    - name: Current date and time is
+      debug:
+        msg: "Current date and time is: {{ current_datetime.stdout }}"
+
+    - set_fact:
+        base_folder: "{{ base_folder | default('/tf/caf') }}"
+
+    - set_fact:
+        template_base_folder: "{{ base_folder }}/landingzones/templates_by_blinq"
+        template_folder: "{{ base_folder }}/landingzones/templates_by_blinq/{{ template | default('template1') }}/"
+        configuration_folder: "{{ base_folder }}/{{ destination_folder | default('configuration_new') }}"
+    
+    - set_fact:
+        backup_folder: "{{ configuration_folder }}_backup_{{ current_datetime.stdout }}"
+
+    - name: Folders that will be used
+      debug:
+        msg:
+          - "Destination folder is: {{ destination_folder }}"
+          - "Base folder: {{ base_folder | default('/tf/caf')}}"
+          - "Template base folder is: {{ template_base_folder }}"
+          - "Template folder is: {{ template_folder }}"          
+          - "Configuration folder is: {{ configuration_folder }}"
+          - "Backup folder is: {{ backup_folder }}"
+  
+    - name: Include variables from local ignite.yaml
+      include_vars:
+        name: ignite
+        file: "{{ configuration_folder }}/ignite.yaml"
+      when: ignite_update_result.failed is not defined or ignite_update_result.failed == false
+      register: ignite_include
+
+    - name: Ignite include result
+      debug:
+        msg: "{{ ignite_include }}"
+
+    - find:
+        paths: "{{ configuration_folder }}"
+        recurse: yes
+        patterns: ["*.j2"]
+        file_type: file
+      register: jinja2_files
+
+    - name: Process configuration jinja2 files
+      ansible.builtin.template:
+        src: "{{ item.path }}"
+        dest: "{{ item.path  | regex_replace('.j2$', '') }}"
+      loop: "{{ jinja2_files.files }}"
+
+    - find:
+        paths: "{{ template_folder }}/.github/workflows/"
+        recurse: yes
+        patterns: ["*.j2"]
+        file_type: file
+      register: workflow_files
+
+    - name: Process GitHub actions workflows jinja2 files
+      ansible.builtin.template:
+        src: "{{ item.path }}"
+        dest: "{{ base_folder }}/.github/workflows/{{ item.path | basename | regex_replace('.j2$', '') }}"
+      loop: "{{ workflow_files.files }}"
+
+      
+
+
+
+
+
+
+
+      
