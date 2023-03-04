@@ -125,6 +125,12 @@ locals {
     lb = {
       for key, value in try(var.landingzone.tfstates, {}) : key => merge(try(data.terraform_remote_state.remote[key].outputs.objects[key].lb, {}))
     }
+    lb_backend_address_pool = {
+      for key, value in try(var.landingzone.tfstates, {}) : key => merge(try(data.terraform_remote_state.remote[key].outputs.objects[key].lb_backend_address_pool, {}))
+    }
+    lb_probe = {
+      for key, value in try(var.landingzone.tfstates, {}) : key => merge(try(data.terraform_remote_state.remote[key].outputs.objects[key].lb_probe, {}))
+    }
     logic_app_integration_account = {
       for key, value in try(var.landingzone.tfstates, {}) : key => merge(try(data.terraform_remote_state.remote[key].outputs.objects[key].logic_app_integration_account, {}))
     }
