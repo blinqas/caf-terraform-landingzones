@@ -1,0 +1,33 @@
+
+# Management
+Deploy the management services
+
+```bash
+#Note: close previous session if you logged with a different service principal using --impersonate-sp-from-keyvault-url
+rover logout
+
+# login a with a user member of the caf-maintainers group
+rover login -t {{ ignite.global.onmicrosoft_domain }} \ -s {{ ignite.global.subscriptions.sub_management }}
+
+rover \
+{% if "not deployed" not in ignite.global.cred_keyvaults.cred_management %}
+  --impersonate-sp-from-keyvault-url https://{{ ignite.global.cred_keyvaults.cred_management }}.vault.azure.net \
+{% endif %}
+  -lz /tf/caf/landingzones/caf_solution \
+  -var-folder {{ ignite.global.folders.configuration_folder }}/level1/management \
+  -tfstate_subscription_id {{ ignite.global.subscriptions.sub_management }} \
+  -target_subscription {{ ignite.global.subscriptions.sub_management }} \
+  -tfstate management.tfstate \
+  -env {{ ignite.global.caf_environment }} \
+  -level level1 \
+  -p ${TF_DATA_DIR}/management.tfstate.tfplan \
+  -a plan
+
+```
+
+
+# Next steps
+
+When you have successfully deployed the management landing zone, you can move to the next step:
+
+[Deploy Identity](../../level1/identity/readme.md)

@@ -1,0 +1,2 @@
+azuread_groups = {
+}

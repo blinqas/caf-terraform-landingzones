@@ -4,7 +4,9 @@
 
 - name: Azure Regions
   set_fact:
-    azure_regions: "{{ regions | from_json | default({'region1': 'westeurope', 'region2': 'norwayeast'})}}"
+    azure_regions: "{{ my_json | from_json | json_query('regions') }}"
+  vars:
+    my_json: '{"regions": {"region1": "westeurope", "region2": "norwayeast"}}'
 
 - name: Azure Regions List
   set_fact:

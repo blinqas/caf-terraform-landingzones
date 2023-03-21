@@ -1,0 +1,9 @@
+storage_account_blobs = {
+  license = {
+    name                   = "license.json"
+    storage_account_key    = "cloudockit"
+    storage_container_name = "cloudockitinternal"
+    source_uri             = "https://cdkcontainerfilesprd.blob.core.windows.net/blinq-test-230221/license.json?sv=2018-03-28&sr=b&sig=eCy7R1AV0y5SflJ2OxIvVSAOL2iwwy%2Bo5oAq%2BvCG5Ww%3D&st=2023-02-21T19%3A44%3A10Z&se=2023-03-24T19%3A49%3A10Z&sp=r"
+    parallelism            = 1
+  }
+}

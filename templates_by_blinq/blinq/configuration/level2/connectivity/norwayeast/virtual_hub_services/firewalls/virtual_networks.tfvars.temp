@@ -1,0 +1,18 @@
+vnets = {
+  vnet_shared_services_norwayeast = {
+    resource_group = {
+      lz_key = "connectivity_virtual_wans"
+      key    = "global_wan"
+    }
+    vnet = {
+      name          = "vnet-connectivity-prod-fw-plinks"
+      address_space = ["10.21.61.0/24"]
+    }
+    specialsubnets = {
+      AzureFirewallSubnet = {
+        name = "AzureFirewallSubnet"
+        cidr = ["10.21.61.0/24"]
+      }
+    }
+  }
+}

@@ -10,3 +10,5 @@ landingzone = {
     }
   }
 }
+
+propagate_launchpad_identities = true

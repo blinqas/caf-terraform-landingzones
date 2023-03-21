@@ -64,10 +64,10 @@
       debug:
         msg: "{{ copy_config_result }}"
 
-    - name: Include tasks in dynamic.yaml to generate all dynamic variables
-      include_tasks: "{{ template_base_folder }}/ansible/dynamic.yaml"
+    - name: Include tasks in collect.yaml to generate all collect variables
+      include_tasks: "{{ template_base_folder }}/ansible/collect.yaml"
       when: copy_config_result.failed == false
-      register: dynamics_result
+      register: collects_result
 
     - name: Copy GitHub actions workflow files from landing zone folder to local folder
       synchronize:
@@ -81,14 +81,14 @@
       debug:
         msg: "{{ copy_workflows_result }}"
 
-    - name: Include tasks in dynamic.yaml to generate all dynamic variables
-      include_tasks: "{{ template_base_folder }}/ansible/dynamic.yaml"
+    - name: Include tasks in collect.yaml to generate all collect variables
+      include_tasks: "{{ template_base_folder }}/ansible/collect.yaml"
       when: copy_config_result.failed == false
-      register: dynamics_result
+      register: collects_result
 
     - name: Dynamics result
       debug:
-        msg: "{{ dynamics_result }}"
+        msg: "{{ collects_result }}"
 
     - name: Include tasks in inputs.yaml
       include_tasks: "{{ template_base_folder }}/ansible/inputs.yaml"
@@ -99,11 +99,11 @@
       debug:
         msg: "{{ inputs_result }}"
 
-    - name: Update local ignite.yaml with dynamic variables
+    - name: Update local ignite.yaml with collect variables
       ansible.builtin.template:
         src: "{{ template_base_folder }}/ansible/ignite.yaml"
         dest: "{{ configuration_folder }}/ignite.yaml"
-      when: dynamics_result.changed == false
+      when: collects_result.changed == false
       register: ignite_update_result
 
     - name: Ignite update result
