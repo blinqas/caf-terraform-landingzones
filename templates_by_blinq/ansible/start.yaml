@@ -64,6 +64,11 @@
       debug:
         msg: "{{ copy_config_result }}"
 
+    - name: Include tasks in inputs.yaml
+      include_tasks: "{{ template_base_folder }}/ansible/inputs.yaml"
+      when: copy_config_result.failed == false
+      register: inputs_result
+
     - name: Include tasks in collect.yaml to generate all collect variables
       include_tasks: "{{ template_base_folder }}/ansible/collect.yaml"
       when: copy_config_result.failed == false
@@ -89,11 +94,6 @@
     - name: Dynamics result
       debug:
         msg: "{{ collects_result }}"
-
-    - name: Include tasks in inputs.yaml
-      include_tasks: "{{ template_base_folder }}/ansible/inputs.yaml"
-      when: copy_config_result.failed == false
-      register: inputs_result
 
     - name: Input result
       debug:

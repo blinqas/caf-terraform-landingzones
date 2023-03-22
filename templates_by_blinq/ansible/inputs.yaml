@@ -1,6 +1,15 @@
-- name: Output regions
-  debug:
-    msg: "Regions = {{ regions }}"
+- name: Customer Name
+  set_fact:
+    customer_name: "demo1"
+
+- name: Environment Name
+  set_fact:
+    env: "alz"
+    caf_environment: "alz"
+
+- name: CAF Prefix
+  set_fact:
+    prefix: "alz"
 
 - name: Azure Regions
   set_fact:
