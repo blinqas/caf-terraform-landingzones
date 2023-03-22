@@ -27,6 +27,7 @@ module "solution" {
   identity                              = local.identity
   keyvault_access_policies              = var.keyvault_access_policies
   keyvault_access_policies_azuread_apps = var.keyvault_access_policies_azuread_apps
+  keyvault_access_policies_aks_agic_ingress = var.keyvault_access_policies_aks_agic_ingress
   keyvault_certificate_issuers          = var.keyvault_certificate_issuers
   keyvaults                             = var.keyvaults
   log_analytics                         = var.log_analytics
