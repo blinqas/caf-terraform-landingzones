@@ -52,6 +52,7 @@ module "solution" {
   tfstates                              = var.tfstates
   user_type                             = var.user_type
   webapp                                = local.webapp
+  purview = local.purview
 
   diagnostics = {
     diagnostics_definition          = local.diagnostics.diagnostics_definition
