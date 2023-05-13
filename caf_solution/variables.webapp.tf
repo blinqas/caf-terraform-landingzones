@@ -18,6 +18,10 @@ variable "app_service_environments_v3" {
 variable "app_service_plans" {
   default = {}
 }
+
+variable "service_plans" {
+  default = {}
+}
 variable "app_services" {
   default = {}
 }

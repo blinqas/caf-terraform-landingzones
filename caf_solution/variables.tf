@@ -271,3 +271,7 @@ variable "random_strings" {
 variable "purview_accounts" {
   default = {}
 }
+
+variable "iothubs" {
+  default = {}
+}
