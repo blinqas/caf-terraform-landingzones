@@ -18,6 +18,7 @@ locals {
       proximity_placement_groups          = var.proximity_placement_groups
       virtual_machine_scale_sets          = var.virtual_machine_scale_sets
       virtual_machines                    = var.virtual_machines
+      virtual_machines_v2                 = var.virtual_machines_v2
       vmware_clusters                     = var.vmware_clusters
       vmware_express_route_authorizations = var.vmware_express_route_authorizations
       vmware_private_clouds               = var.vmware_private_clouds

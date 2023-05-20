@@ -51,6 +51,9 @@ variable "proximity_placement_groups" {
 variable "virtual_machines" {
   default = {}
 }
+variable "virtual_machines_v2" {
+  default = {}
+}
 variable "virtual_machine_scale_sets" {
   default = {}
 }
