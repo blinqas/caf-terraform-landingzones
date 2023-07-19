@@ -10,13 +10,13 @@ terraform {
 }
 
 provider "azurerm" {
-  partner_id = "ca4078f8-9bc4-471b-ab5b-3af6b86a42c8"
+  partner_id = "047b6579-da91-4bea-a9e1-df0fbc86f832"
   # partner identifier for CAF Terraform landing zones.
   features {}
 }
 
 provider "azurerm" {
-  partner_id = "ca4078f8-9bc4-471b-ab5b-3af6b86a42c8"
+  partner_id = "047b6579-da91-4bea-a9e1-df0fbc86f832"
   alias      = "connectivity"
   features {}
   subscription_id = local.subscription_id_connectivity
@@ -24,7 +24,7 @@ provider "azurerm" {
 }
 
 provider "azurerm" {
-  partner_id = "ca4078f8-9bc4-471b-ab5b-3af6b86a42c8"
+  partner_id = "047b6579-da91-4bea-a9e1-df0fbc86f832"
   alias      = "management"
   features {}
   subscription_id = var.subscription_id_management == null ? data.azurerm_client_config.current.subscription_id : var.subscription_id_management
@@ -32,7 +32,7 @@ provider "azurerm" {
 }
 
 provider "azurerm" {
-  partner_id = "ca4078f8-9bc4-471b-ab5b-3af6b86a42c8"
+  partner_id = "047b6579-da91-4bea-a9e1-df0fbc86f832"
   alias      = "identity"
   features {}
   subscription_id = var.subscription_id_identity == null ? data.azurerm_client_config.current.subscription_id : var.subscription_id_identity
