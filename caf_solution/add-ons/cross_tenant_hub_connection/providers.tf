@@ -29,6 +29,20 @@ data "terraform_remote_state" "remote" {
   }
 }
 
+data "terraform_remote_state" "local" {
+  for_each = try(var.landingzone.tfstates, {})
+
+  backend = "local"
+  config = "${var.env.TF_DATA_DIR}/tfstates/${var.env.TF_VAR_level}/${var.env.TF_VAR_workspace}/each.value.tfstate"
+}
+
+locals {
+  terraform_remote_state = merge(
+    try(data.terraform_remote_state.remote, {}),
+    try(data.terraform_remote_state.local, {})
+  )
+}
+
 data "azurerm_client_config" "current" {
   provider = azurerm.vnet
 }

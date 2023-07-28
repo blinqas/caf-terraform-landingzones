@@ -273,3 +273,7 @@ variable "azure_container_registries" {
 variable "private_dns" {
   default = {}
 }
+
+variable "private_endpoints" {
+  default = {}
+}

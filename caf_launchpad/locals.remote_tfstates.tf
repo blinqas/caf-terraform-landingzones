@@ -15,6 +15,21 @@ data "terraform_remote_state" "remote" {
   config  = local.remote_state[try(each.value.backend_type, var.landingzone.backend_type, var.backend_type)][each.key]
 }
 
+data "terraform_remote_state" "local" {
+  for_each = try(var.landingzone.tfstates, {})
+
+  backend = "local"
+  config = "${var.env.TF_DATA_DIR}/tfstates/${var.env.TF_VAR_level}/${var.env.TF_VAR_workspace}/each.value.tfstate"
+  # config  = local.remote_state[try(each.value.backend_type, var.landingzone.backend_type, var.backend_type)][each.key]
+}
+
+locals {
+  terraform_remote_state = merge(
+    try(data.terraform_remote_state.remote, {}),
+    try(data.terraform_remote_state.local, {})
+  )
+}
+
 locals {
 
   remote_state = {
