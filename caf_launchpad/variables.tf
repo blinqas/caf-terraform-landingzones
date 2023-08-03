@@ -17,9 +17,6 @@ variable "tfstate_organization" {
 variable "tfstate_hostname" {
   default = null
 }
-variable "workspace" {
-  default = null
-}
 
 variable "tenant_id" {}
 variable "landingzone" {
@@ -78,12 +75,29 @@ variable "event_hub_namespaces" {
 # Do not change the default value to be able to upgrade to the standard launchpad
 variable "tf_name" {
   description = "Name of the terraform state in the blob storage (Does not include the extension .tfstate). Setup by the rover. Leave empty in the configuration file"
-  default     = ""
+  default     = null
+}
+
+variable "data_dir" {
+  description = "Path to the local terraform data directory. Setup by the rover. Leave empty in the configuration file"
+  default     = null
+}
+
+variable "level" {
+  description = "Level of the landing zone. Setup by the rover. Leave empty in the configuration file"
+  default     = null
+}
+
+variable "workspace" {
+  description = "Name of the workspace to use for the deployment. Setup by the rover. Leave empty in the configuration file"
+  default = null
 }
 
 variable "resource_groups" {}
 
-variable "storage_accounts" {}
+variable "storage_accounts" {
+  default = {}
+}
 variable "keyvaults" {}
 variable "keyvault_access_policies" {
   default = {}

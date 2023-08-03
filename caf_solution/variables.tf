@@ -34,9 +34,7 @@ variable "tfstate_organization" {
 variable "tfstate_hostname" {
   default = null
 }
-variable "workspace" {
-  default = null
-}
+
 variable "sas_token" {
   description = "SAS Token to access the remote state in another Azure AD tenant."
   default     = null
@@ -261,4 +259,24 @@ variable "propagate_launchpad_identities" {
 }
 variable "random_strings" {
   default = {}
+}
+
+variable "tf_name" {
+  description = "Name of the terraform state in the blob storage (Does not include the extension .tfstate). Setup by the rover. Leave empty in the configuration file"
+  default     = null
+}
+
+variable "data_dir" {
+  description = "Path to the local terraform data directory. Setup by the rover. Leave empty in the configuration file"
+  default     = null
+}
+
+variable "level" {
+  description = "Level of the landing zone. Setup by the rover. Leave empty in the configuration file"
+  default     = null
+}
+
+variable "workspace" {
+  description = "Name of the workspace to use for the deployment. Setup by the rover. Leave empty in the configuration file"
+  default = null
 }

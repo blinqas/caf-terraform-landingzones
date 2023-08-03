@@ -19,7 +19,8 @@ data "terraform_remote_state" "local" {
   for_each = try(var.landingzone.tfstates, {})
 
   backend = "local"
-  config = "${var.env.TF_DATA_DIR}/tfstates/${var.env.TF_VAR_level}/${var.env.TF_VAR_workspace}/each.value.tfstate"
+  # /home/vscode/.terraform.cache/dev/tfstates/level0/tfstate/caf_launchpad.tfstate
+  config = try("${var.data_dir}/tfstates/${var.level}/tfstate/${each.value.tfstate}", null)
   # config  = local.remote_state[try(each.value.backend_type, var.landingzone.backend_type, var.backend_type)][each.key]
 }
 
@@ -54,6 +55,7 @@ locals {
         }
       } if try(value.backend_type, "azurerm") == "remote"
     }
+    
 
   }
 

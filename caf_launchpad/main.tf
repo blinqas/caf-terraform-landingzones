@@ -117,15 +117,15 @@ locals {
 
   tfstates = tomap(
     {
-      (var.landingzone.key) = local.backend[var.landingzone.backend_type]
+      (var.landingzone.key) = local.backend[try(var.backend_type, var.landingzone.backend_type)]
     }
   )
 
   backend = {
     azurerm = {
-      storage_account_name = module.launchpad.storage_accounts[var.launchpad_key_names.tfstates[0]].name
-      container_name       = module.launchpad.storage_accounts[var.launchpad_key_names.tfstates[0]].containers["tfstate"].name
-      resource_group_name  = module.launchpad.storage_accounts[var.launchpad_key_names.tfstates[0]].resource_group_name
+      storage_account_name = try(module.launchpad.storage_accounts[var.launchpad_key_names.tfstates[0]].name, null)
+      container_name       = try(module.launchpad.storage_accounts[var.launchpad_key_names.tfstates[0]].containers["tfstate"].name, null)
+      resource_group_name  = try(module.launchpad.storage_accounts[var.launchpad_key_names.tfstates[0]].resource_group_name, null)
       key                  = var.tf_name
       level                = var.landingzone.level
       tenant_id            = data.azurerm_client_config.current.tenant_id
@@ -138,6 +138,11 @@ locals {
         name = var.workspace
       }
     }
+
+    local = {
+      path = "${var.data_dir}/${var.environment}/tfstates/${var.level}/${var.workspace}/${var.tf_name}.tfstate"
+    }
+
   }
 
 }
