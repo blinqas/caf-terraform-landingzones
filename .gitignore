@@ -12,4 +12,4 @@
 public
 *output.json
 **/templates/ansible/action_plugins/__pycache__
-azure-caf-modules/
+aztfmod/

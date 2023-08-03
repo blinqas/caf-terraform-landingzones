@@ -141,7 +141,7 @@ jobs:
       - name: Checkout Terraform Azure CAF Modules
         shell: bash
         run: |
-          git clone --branch ${{ inputs.caf_ref }} --single-branch ${{ inputs.caf_repo }} ./landingzones/azure-caf-modules
+          git clone --branch ${{ inputs.caf_ref }} --single-branch ${{ inputs.caf_repo }} ./landingzones/aztfmod
 
       - name: Generate Rover commands
         id: generate-rover-command
