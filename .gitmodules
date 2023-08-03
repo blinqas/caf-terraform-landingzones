@@ -1,0 +1,3 @@
+[submodule "aztfmod"]
+	path = aztfmod
+	url = https://github.com/blinqas/terraform-azurerm-caf
