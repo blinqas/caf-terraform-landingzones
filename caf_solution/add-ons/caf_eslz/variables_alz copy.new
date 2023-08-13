@@ -30,7 +30,7 @@ variable "root_name" {
 variable "deploy_core_landing_zones" {
   type        = bool
   description = "If set to true, module will deploy the core Enterprise-scale Management Group hierarchy, including \"out of the box\" policies and roles."
-  default     = false
+  default     = true
 }
 
 variable "deploy_corp_landing_zones" {
@@ -80,7 +80,7 @@ variable "configure_management_resources" {
           enable_solution_for_agent_health_assessment       = optional(bool, true)
           enable_solution_for_anti_malware                  = optional(bool, true)
           enable_solution_for_change_tracking               = optional(bool, true)
-          enable_solution_for_service_map                   = optional(bool, true)
+          enable_solution_for_service_map                   = optional(bool, false)
           enable_solution_for_sql_assessment                = optional(bool, true)
           enable_solution_for_sql_vulnerability_assessment  = optional(bool, true)
           enable_solution_for_sql_advanced_threat_detection = optional(bool, true)
@@ -555,10 +555,10 @@ variable "subscription_id_overrides" {
 variable "subscription_id_connectivity" {
   type        = string
   description = "If specified, identifies the Platform subscription for \"Connectivity\" for resource deployment and correct placement in the Management Group hierarchy."
-  default     = null
+  default     = ""
 
   validation {
-    condition     = can(regex("^[a-z0-9-]{36}$", var.subscription_id_connectivity)) || var.subscription_id_connectivity == null
+    condition     = can(regex("^[a-z0-9-]{36}$", var.subscription_id_connectivity)) || var.subscription_id_connectivity == ""
     error_message = "Value must be a valid Subscription ID (GUID)."
   }
 }
@@ -566,10 +566,10 @@ variable "subscription_id_connectivity" {
 variable "subscription_id_identity" {
   type        = string
   description = "If specified, identifies the Platform subscription for \"Identity\" for resource deployment and correct placement in the Management Group hierarchy."
-  default     = null
+  default     = ""
 
   validation {
-    condition     = can(regex("^[a-z0-9-]{36}$", var.subscription_id_identity)) || var.subscription_id_identity == null
+    condition     = can(regex("^[a-z0-9-]{36}$", var.subscription_id_identity)) || var.subscription_id_identity == ""
     error_message = "Value must be a valid Subscription ID (GUID)."
   }
 }
@@ -577,10 +577,10 @@ variable "subscription_id_identity" {
 variable "subscription_id_management" {
   type        = string
   description = "If specified, identifies the Platform subscription for \"Management\" for resource deployment and correct placement in the Management Group hierarchy."
-  default     = null
+  default     = ""
 
   validation {
-    condition     = can(regex("^[a-z0-9-]{36}$", var.subscription_id_management)) || var.subscription_id_management == null
+    condition     = can(regex("^[a-z0-9-]{36}$", var.subscription_id_management)) || var.subscription_id_management == ""
     error_message = "Value must be a valid Subscription ID (GUID)."
   }
 }
@@ -695,7 +695,7 @@ variable "disable_telemetry" {
 variable "strict_subscription_association" {
   type        = bool
   description = "If set to true, subscriptions associated to management groups will be exclusively set by the module and any added by another process will be removed. If set to false, the module will will only enforce association of the specified subscriptions and those added to management groups by other processes will not be removed."
-  default     = false    
+  default     = true
 }
 
 variable "policy_non_compliance_message_enabled" {
