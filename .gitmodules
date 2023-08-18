@@ -1,4 +1,0 @@
-[submodule "aztfmod"]
-	path = aztfmod
-	url = https://github.com/blinqas/terraform-azurerm-caf
-	branch = blinq-5.7.3-updates
