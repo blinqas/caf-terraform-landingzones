@@ -12,4 +12,5 @@
 public
 *output.json
 **/templates/ansible/action_plugins/__pycache__
-aztfmod/
+aztfmod
+
