@@ -31,8 +31,12 @@ provider "azuread" {
 }
 
 provider "azurerm" {
-  partner_id = "047b6579-da91-4bea-a9e1-df0fbc86f832"
   # partner identifier for CAF Terraform landing zones.
+  partner_id = "047b6579-da91-4bea-a9e1-df0fbc86f832"
+  
+  # Emergency change to skip provider registration because of a Microsoft Azure API issue.
+  skip_provider_registration = var.azurerm_skip_provider_registration
+  
   features {
     api_management {
       purge_soft_delete_on_destroy = try(var.provider_azurerm_features_api_management.purge_soft_delete_on_destroy, null)
