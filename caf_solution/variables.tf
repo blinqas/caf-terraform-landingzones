@@ -265,3 +265,8 @@ variable "random_strings" {
 variable "data_sources" {
   default = {}
 }
+
+variable "azurerm_skip_provider_registration" {
+  description = "Only use in emergency situation to skip the provider registration. This will prevent the rover to register the provider. This is not recommended and should be used only in emergency situation."
+  default = false
+}
