@@ -1,0 +1,8 @@
+lz_name: yankee
+region_name: Norway East
+region_ip_prefix: 10.73.0.0/16
+management_group_id: azlz1-landing-zones
+businessUnit: IT-felles
+environment: dev
+costcenter: 1231231
+template: utfylt felt
