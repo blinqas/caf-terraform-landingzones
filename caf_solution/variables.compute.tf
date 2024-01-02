@@ -81,9 +81,9 @@ variable "vmware_clusters" {
 variable "vmware_express_route_authorizations" {
   default = {}
 }
-variable "vmware_private_clouds" {
-  default = {}
-}
+# variable "vmware_private_clouds" {
+#  default = {}
+# }
 variable "wvd_application_groups" {
   default = {}
 }
