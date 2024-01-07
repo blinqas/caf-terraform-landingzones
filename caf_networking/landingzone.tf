@@ -1,6 +1,6 @@
 module "solution" {
-  source  = "aztfmod/caf/azurerm"
-  version = "5.7.7"
+  source  = "../aztfmod/modules/networking"
+  # version = "5.7.7"
   # source = "git::https://github.com/blinqas/terraform-azurerm-caf.git?ref=main"
 
   providers = {
