@@ -265,3 +265,7 @@ variable "random_strings" {
 variable "data_sources" {
   default = {}
 }
+
+variable "remote_resources_to_merge" {
+  default = {}
+}
