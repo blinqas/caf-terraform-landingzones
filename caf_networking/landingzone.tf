@@ -13,6 +13,7 @@ module "solution" {
   identity                              = local.identity
   managed_identities                    = var.managed_identities
   role_mapping                          = var.role_mapping
+  global_settings                       = local.global_settings
 
   diagnostics = {
     diagnostic_event_hub_namespaces = try(local.diagnostics.diagnostic_event_hub_namespaces, var.diagnostic_event_hub_namespaces)
