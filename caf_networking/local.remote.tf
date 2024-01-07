@@ -140,14 +140,14 @@ locals {
     machine_learning_workspaces = try(var.remote_resources_to_merge.machine_learning_workspaces, true) ? {
       for key, value in try(var.landingzone.tfstates, {}) : key => merge(try(data.terraform_remote_state.remote[key].outputs.objects[key].machine_learning_workspaces, {}))
     } : {}
-    managed_identities = merge(
+    managed_identities = try(var.remote_resources_to_merge.managed_identities, true) ? merge(
       tomap({ "launchpad" = try(data.terraform_remote_state.remote[var.landingzone.global_settings_key].outputs.launchpad_identities["launchpad"].managed_identities, {}) }),
-      try(var.remote_resources_to_merge.try, true) ? {
+      {
         for key, value in try(var.landingzone.tfstates, {}) : key => merge(
-          try(data.terraform_remote_state.remote[key].outputs.objects[key]. : {}managed_identities, {})
+          try(data.terraform_remote_state.remote[key].outputs.objects[key].managed_identities, {})
         )
       }
-    )
+    ) : {}
     signalr_services = try(var.remote_resources_to_merge.signalr_services, true) ? {
       for key, value in try(var.landingzone.tfstates, {}) : key => merge(try(data.terraform_remote_state.remote[key].outputs.objects[key].signalr_services, {}))
     } : {}
